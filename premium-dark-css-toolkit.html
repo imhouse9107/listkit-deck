@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Premium Dark CSS Toolkit - 10 Techniques</title>
+<style>
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  /* --- YOUR ACCENT COLOR SYSTEM (Purple #7C5CFC) --- */
+  --accent:        #7C5CFC;
+  --accent-rgb:    124, 92, 252;
+  --accent-light:  #9B82FD;
+  --accent-dim:    rgba(124, 92, 252, 0.15);
+  --accent-glow:   rgba(124, 92, 252, 0.4);
+  --accent-subtle: rgba(124, 92, 252, 0.08);
+
+  /* --- SURFACE LAYERS (never use pure #000) --- */
+  --bg-deep:    #08090E;
+  --bg-base:    #0C0D14;
+  --bg-raised:  #12131D;
+  --bg-card:    #16172A;
+  --bg-hover:   #1C1D35;
+  --border:     rgba(255,255,255,0.06);
+  --border-hover: rgba(255,255,255,0.12);
+
+  /* --- TEXT HIERARCHY --- */
+  --text-primary:   rgba(255,255,255,0.92);
+  --text-secondary: rgba(255,255,255,0.56);
+  --text-tertiary:  rgba(255,255,255,0.32);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro Display', system-ui, sans-serif;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+section {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 80px 40px;
+  border-bottom: 1px solid var(--border);
+}
+
+h1 {
+  font-size: 3rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin-bottom: 12px;
+}
+
+h2 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+
+h3 {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+}
+
+p.desc {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  max-width: 600px;
+  margin-bottom: 40px;
+  line-height: 1.7;
+}
+
+code {
+  background: rgba(124, 92, 252, 0.1);
+  color: var(--accent-light);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.85em;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+
+/* ============================================================
+   0. NOISE / GRAIN TEXTURE OVERLAY (applied globally)
+   The subtle film grain that Linear, Raycast, and premium
+   dark sites use. SVG feTurbulence encoded as data URI.
+   ============================================================ */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 200px;
+}
+
+/* Stronger grain variant for specific elements */
+.grain-overlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.06;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 182px;
+  border-radius: inherit;
+}
+
+
+/* ============================================================
+   1. ANIMATED GRADIENT ORBS / BLOBS
+   Floating radial gradient blobs like Linear, Vercel, Stripe.
+   Multiple layered orbs with different colors, sizes, blur.
+   ============================================================ */
+.orb-container {
+  position: relative;
+  width: 100%;
+  height: 500px;
+  overflow: hidden;
+  border-radius: 16px;
+  background: var(--bg-base);
+  isolation: isolate;
+}
+
+/* The blur goes on the container for GPU performance */
+.orb-blur-layer {
+  position: absolute;
+  inset: 0;
+  filter: blur(80px);
+  /* Use blur(clamp(40px, 8vw, 120px)) for responsive */
+}
+
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  will-change: transform;
+}
+
+/* Primary accent orb */
+.orb-1 {
+  width: 400px;
+  height: 400px;
+  top: 10%;
+  left: 20%;
+  background: radial-gradient(circle at 30% 30%,
+    rgba(var(--accent-rgb), 0.8),
+    rgba(var(--accent-rgb), 0.3) 50%,
+    transparent 70%
+  );
+  animation: orb-float-1 12s ease-in-out infinite;
+}
+
+/* Secondary warm orb */
+.orb-2 {
+  width: 350px;
+  height: 350px;
+  top: 40%;
+  right: 15%;
+  background: radial-gradient(circle at 50% 40%,
+    rgba(236, 72, 153, 0.7),
+    rgba(236, 72, 153, 0.2) 50%,
+    transparent 70%
+  );
+  animation: orb-float-2 15s ease-in-out infinite;
+}
+
+/* Tertiary cool orb */
+.orb-3 {
+  width: 300px;
+  height: 300px;
+  top: 60%;
+  left: 40%;
+  background: radial-gradient(circle at 60% 30%,
+    rgba(56, 189, 248, 0.6),
+    rgba(56, 189, 248, 0.15) 50%,
+    transparent 70%
+  );
+  animation: orb-float-3 18s ease-in-out infinite;
+}
+
+@keyframes orb-float-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25%      { transform: translate(60px, -40px) scale(1.05); }
+  50%      { transform: translate(-30px, 50px) scale(0.95); }
+  75%      { transform: translate(40px, 20px) scale(1.02); }
+}
+
+@keyframes orb-float-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(-50px, 30px) scale(1.08); }
+  66%      { transform: translate(40px, -60px) scale(0.92); }
+}
+
+@keyframes orb-float-3 {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  50%      { transform: translate(70px, -30px) rotate(180deg); }
+}
+
+/* --- CONIC GRADIENT that slowly rotates --- */
+@property --conic-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.rotating-conic {
+  position: absolute;
+  inset: 0;
+  background: conic-gradient(
+    from var(--conic-angle),
+    transparent,
+    rgba(var(--accent-rgb), 0.15),
+    transparent,
+    rgba(236, 72, 153, 0.1),
+    transparent,
+    rgba(56, 189, 248, 0.12),
+    transparent
+  );
+  animation: rotate-conic 20s linear infinite;
+  mix-blend-mode: screen;
+}
+
+@keyframes rotate-conic {
+  to { --conic-angle: 360deg; }
+}
+
+/* Content that sits on top of orbs */
+.orb-content {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+}
+
+
+/* ============================================================
+   2. CARD GLOW EFFECT ON HOVER (cursor-following border)
+   The Linear / Raycast technique. Uses a radial-gradient mask
+   positioned at mouse coordinates via CSS custom properties.
+   ============================================================ */
+.glow-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;           /* the 1px gap IS the border */
+  background: var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* The glow layer that follows cursor */
+.glow-cards::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(var(--accent-rgb), 0.15),
+    transparent 40%
+  );
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.glow-cards:hover::before {
+  opacity: 1;
+}
+
+.glow-card {
+  background: var(--bg-card);
+  padding: 32px;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.3s ease;
+}
+
+.glow-card:hover {
+  background: var(--bg-hover);
+}
+
+/* Individual card border glow */
+.glow-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    400px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(var(--accent-rgb), 0.08),
+    transparent 40%
+  );
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.glow-card:hover::before {
+  opacity: 1;
+}
+
+.glow-card h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+
+.glow-card p {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* --- STANDALONE CARD with animated gradient border --- */
+@property --card-border-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.gradient-border-card {
+  position: relative;
+  padding: 32px;
+  border-radius: 12px;
+  background: var(--bg-card);
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  overflow: hidden;
+  margin-top: 32px;
+}
+
+.gradient-border-card::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--card-border-angle),
+    transparent 25%,
+    var(--accent) 50%,
+    transparent 75%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: spin-border 4s linear infinite;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.gradient-border-card:hover::before {
+  opacity: 1;
+}
+
+@keyframes spin-border {
+  to { --card-border-angle: 360deg; }
+}
+
+
+/* ============================================================
+   3. ANIMATED STAT COUNTERS
+   Uses CSS @property to interpolate integers with premium easing.
+   Triggered by IntersectionObserver in the JS below.
+   ============================================================ */
+@property --stat-1 { syntax: "<integer>"; initial-value: 0; inherits: false; }
+@property --stat-2 { syntax: "<integer>"; initial-value: 0; inherits: false; }
+@property --stat-3 { syntax: "<integer>"; initial-value: 0; inherits: false; }
+@property --stat-4 { syntax: "<integer>"; initial-value: 0; inherits: false; }
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at 50% 0%,
+    rgba(var(--accent-rgb), 0.08),
+    transparent 60%
+  );
+}
+
+.stat-number {
+  font-size: 3.5rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: var(--accent-light);
+  font-variant-numeric: tabular-nums;
+  position: relative;
+}
+
+/* CSS-only counter animation (the JS triggers .animate class) */
+.stat-number.s1 { counter-reset: s var(--stat-1); }
+.stat-number.s2 { counter-reset: s var(--stat-2); }
+.stat-number.s3 { counter-reset: s var(--stat-3); }
+.stat-number.s4 { counter-reset: s var(--stat-4); }
+
+.stat-number::after {
+  content: counter(s);
+}
+
+/* THE PREMIUM EASING: cubic-bezier(0.16, 1, 0.3, 1) = "expo out"
+   This decelerates sharply at the end, making numbers feel weighty. */
+
+.stat-number.s1.animate { animation: count-1 2.0s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.stat-number.s2.animate { animation: count-2 2.2s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.1s; }
+.stat-number.s3.animate { animation: count-3 2.4s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.2s; }
+.stat-number.s4.animate { animation: count-4 2.0s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.3s; }
+
+@keyframes count-1 { from { --stat-1: 0; } to { --stat-1: 2200; } }
+@keyframes count-2 { from { --stat-2: 0; } to { --stat-2: 30; } }
+@keyframes count-3 { from { --stat-3: 0; } to { --stat-3: 947; } }
+@keyframes count-4 { from { --stat-4: 0; } to { --stat-4: 19; } }
+
+.stat-label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-top: 8px;
+  letter-spacing: 0.02em;
+}
+
+.stat-prefix, .stat-suffix {
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  vertical-align: baseline;
+}
+
+
+/* ============================================================
+   4. PIPELINE / FLOW DIAGRAM
+   Horizontal flow with animated connecting lines, traveling
+   light pulses, and glowing nodes.
+   ============================================================ */
+.pipeline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 60px 0;
+  position: relative;
+}
+
+.pipeline-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  z-index: 2;
+}
+
+.node-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Pulsing glow behind active nodes */
+.node-icon::before {
+  content: "";
+  position: absolute;
+  inset: -8px;
+  border-radius: 20px;
+  background: radial-gradient(
+    circle,
+    rgba(var(--accent-rgb), 0.3),
+    transparent 70%
+  );
+  animation: node-pulse 3s ease-in-out infinite;
+  z-index: -1;
+}
+
+@keyframes node-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50%      { opacity: 0.8; transform: scale(1.15); }
+}
+
+.node-icon:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 20px rgba(var(--accent-rgb), 0.3),
+              0 0 60px rgba(var(--accent-rgb), 0.1);
+  transform: translateY(-2px);
+}
+
+.node-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Connecting lines between nodes */
+.pipeline-connector {
+  width: 80px;
+  height: 2px;
+  background: var(--border);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Traveling light pulse along the connector */
+.pipeline-connector::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: -40px;
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--accent),
+    rgba(var(--accent-rgb), 0.8),
+    transparent
+  );
+  animation: travel-light 2.5s ease-in-out infinite;
+  box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.6),
+              0 0 30px rgba(var(--accent-rgb), 0.2);
+}
+
+/* Stagger the light pulses */
+.pipeline-connector:nth-child(3)::before  { animation-delay: 0s; }
+.pipeline-connector:nth-child(5)::before  { animation-delay: 0.6s; }
+.pipeline-connector:nth-child(7)::before  { animation-delay: 1.2s; }
+.pipeline-connector:nth-child(9)::before  { animation-delay: 1.8s; }
+
+@keyframes travel-light {
+  0%   { left: -40px; opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { left: calc(100% + 40px); opacity: 0; }
+}
+
+/* Small dot at each end of connector */
+.pipeline-connector::after {
+  content: "";
+  position: absolute;
+  right: -3px;
+  top: -2px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  border: 1px solid rgba(var(--accent-rgb), 0.3);
+}
+
+
+/* ============================================================
+   5. TEXT EFFECTS
+   Gradient text, text reveal, headline animations.
+   ============================================================ */
+
+/* --- Premium gradient text --- */
+.gradient-text {
+  background: linear-gradient(
+    135deg,
+    #fff 0%,
+    rgba(var(--accent-rgb), 1) 50%,
+    #fff 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer-text 3s ease-in-out infinite;
+}
+
+@keyframes shimmer-text {
+  0%   { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+
+/* --- Animated gradient text (Linear style) --- */
+.animated-gradient-text {
+  background: linear-gradient(
+    90deg,
+    var(--accent-light),
+    #ec4899,
+    #38bdf8,
+    var(--accent-light)
+  );
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-flow 4s linear infinite;
+}
+
+@keyframes gradient-flow {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 300% 50%; }
+}
+
+/* --- Text reveal (fade up on load) --- */
+.text-reveal {
+  overflow: hidden;
+}
+
+.text-reveal span {
+  display: inline-block;
+  transform: translateY(100%);
+  opacity: 0;
+  animation: reveal-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Stagger children */
+.text-reveal span:nth-child(2) { animation-delay: 0.08s; }
+.text-reveal span:nth-child(3) { animation-delay: 0.16s; }
+.text-reveal span:nth-child(4) { animation-delay: 0.24s; }
+.text-reveal span:nth-child(5) { animation-delay: 0.32s; }
+
+@keyframes reveal-up {
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* --- Clip-path text reveal (Apple style) --- */
+.clip-reveal {
+  clip-path: inset(0 100% 0 0);
+  animation: clip-in 1s cubic-bezier(0.77, 0, 0.18, 1) forwards;
+}
+
+@keyframes clip-in {
+  to { clip-path: inset(0 0 0 0); }
+}
+
+/* --- Subtle glow behind headline --- */
+.headline-glow {
+  position: relative;
+  display: inline-block;
+}
+
+.headline-glow::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background: linear-gradient(135deg, var(--accent), #ec4899);
+  filter: blur(30px);
+  opacity: 0.4;
+  z-index: -1;
+}
+
+
+/* ============================================================
+   6. MICRO-INTERACTIONS
+   Premium hover states, transitions, easing curves.
+   ============================================================ */
+
+/* --- Premium button --- */
+.premium-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 28px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  /* THE key: separate timing for each property */
+  transition:
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    background 0.3s ease;
+}
+
+.premium-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255,255,255,0.15),
+    transparent 50%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.premium-btn:hover {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow:
+    0 4px 12px rgba(var(--accent-rgb), 0.4),
+    0 12px 40px rgba(var(--accent-rgb), 0.2);
+}
+
+.premium-btn:hover::before {
+  opacity: 1;
+}
+
+.premium-btn:active {
+  transform: translateY(0px) scale(0.98);
+  transition-duration: 0.1s;
+}
+
+/* --- Magnetic hover card --- */
+.magnetic-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px;
+  transition:
+    transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.3s ease,
+    box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: default;
+}
+
+.magnetic-card:hover {
+  border-color: var(--border-hover);
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, 0.3),
+    0 0 1px rgba(var(--accent-rgb), 0.1);
+  transform: translateY(-4px);
+}
+
+/* --- Link hover with underline animation --- */
+.premium-link {
+  color: var(--accent-light);
+  text-decoration: none;
+  position: relative;
+  font-weight: 500;
+}
+
+.premium-link::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1.5px;
+  background: var(--accent);
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.premium-link:hover::after {
+  width: 100%;
+}
+
+/* --- Smooth icon rotation on hover --- */
+.icon-rotate {
+  display: inline-block;
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.icon-rotate:hover {
+  transform: rotate(90deg);
+}
+
+/* --- Scale + glow chip/badge --- */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: var(--accent-subtle);
+  border: 1px solid rgba(var(--accent-rgb), 0.15);
+  border-radius: 100px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--accent-light);
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.chip:hover {
+  background: rgba(var(--accent-rgb), 0.15);
+  border-color: rgba(var(--accent-rgb), 0.3);
+  box-shadow: 0 0 20px rgba(var(--accent-rgb), 0.15);
+  transform: scale(1.05);
+}
+
+
+/* ============================================================
+   7. COLOR THEORY SYSTEM
+   One accent color (#7C5CFC) at different opacities for
+   backgrounds, borders, glows, text, and surfaces.
+   ============================================================ */
+.color-demo {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.color-swatch {
+  border-radius: 12px;
+  padding: 20px;
+  font-size: 0.8rem;
+  font-family: 'SF Mono', monospace;
+  position: relative;
+}
+
+/* 8% - Subtle surface tint */
+.swatch-bg { background: rgba(var(--accent-rgb), 0.08); color: var(--text-secondary); border: 1px solid rgba(var(--accent-rgb), 0.06); }
+/* 15% - Card/container background */
+.swatch-card { background: rgba(var(--accent-rgb), 0.15); color: var(--text-primary); }
+/* 25% - Borders and dividers */
+.swatch-border { background: transparent; border: 2px solid rgba(var(--accent-rgb), 0.25); color: var(--text-secondary); }
+/* 40% - Glow / shadow color */
+.swatch-glow { background: var(--bg-card); box-shadow: 0 0 30px rgba(var(--accent-rgb), 0.4); color: var(--text-primary); }
+/* 60% - Secondary text / labels */
+.swatch-label { background: var(--bg-card); color: rgba(var(--accent-rgb), 0.6); border: 1px solid var(--border); font-weight: 600; font-size: 1.1rem; }
+/* 100% - Primary accent (buttons, active states) */
+.swatch-full { background: var(--accent); color: #fff; font-weight: 600; }
+/* Gradient application */
+.swatch-gradient {
+  background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.2), rgba(var(--accent-rgb), 0.05));
+  border: 1px solid rgba(var(--accent-rgb), 0.1);
+  color: var(--text-secondary);
+}
+
+
+/* ============================================================
+   8. WOW FACTOR TECHNIQUES
+   The 5 effects that make someone say "this is the best site."
+   ============================================================ */
+
+/* --- A) Full-page mesh gradient background --- */
+.mesh-bg {
+  position: relative;
+  min-height: 400px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--bg-base);
+}
+
+.mesh-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 40%, rgba(var(--accent-rgb), 0.2), transparent),
+    radial-gradient(ellipse 60% 80% at 80% 20%, rgba(236, 72, 153, 0.15), transparent),
+    radial-gradient(ellipse 50% 60% at 50% 80%, rgba(56, 189, 248, 0.12), transparent);
+  animation: mesh-shift 15s ease-in-out infinite alternate;
+}
+
+@keyframes mesh-shift {
+  0%   { filter: blur(60px) brightness(1); transform: scale(1) rotate(0deg); }
+  50%  { filter: blur(80px) brightness(1.1); transform: scale(1.05) rotate(2deg); }
+  100% { filter: blur(70px) brightness(1); transform: scale(1) rotate(-1deg); }
+}
+
+/* --- B) Spotlight that follows cursor on hero section --- */
+.spotlight-hero {
+  position: relative;
+  min-height: 300px;
+  border-radius: 16px;
+  background: var(--bg-base);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spotlight-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    800px circle at var(--spot-x, 50%) var(--spot-y, 50%),
+    rgba(var(--accent-rgb), 0.08),
+    transparent 50%
+  );
+  transition: background 0.15s ease;
+  pointer-events: none;
+}
+
+/* --- C) Glassmorphism card --- */
+.glass-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px) saturate(1.3);
+  -webkit-backdrop-filter: blur(20px) saturate(1.3);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 32px;
+  position: relative;
+  z-index: 2;
+}
+
+/* --- D) Animated border glow (single element, no JS) --- */
+@property --glow-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.auto-glow-card {
+  position: relative;
+  background: var(--bg-card);
+  border-radius: 12px;
+  padding: 32px;
+  margin-top: 24px;
+  isolation: isolate;
+}
+
+.auto-glow-card::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--glow-angle),
+    transparent,
+    var(--accent),
+    transparent,
+    transparent
+  );
+  z-index: -2;
+  animation: auto-glow-spin 6s linear infinite;
+}
+
+.auto-glow-card::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  background: var(--bg-card);
+  z-index: -1;
+}
+
+@keyframes auto-glow-spin {
+  to { --glow-angle: 360deg; }
+}
+
+/* --- E) Entrance animation (staggered fade-up) --- */
+.stagger-in > * {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: stagger-fade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.stagger-in > *:nth-child(1) { animation-delay: 0.0s; }
+.stagger-in > *:nth-child(2) { animation-delay: 0.08s; }
+.stagger-in > *:nth-child(3) { animation-delay: 0.16s; }
+.stagger-in > *:nth-child(4) { animation-delay: 0.24s; }
+.stagger-in > *:nth-child(5) { animation-delay: 0.32s; }
+.stagger-in > *:nth-child(6) { animation-delay: 0.40s; }
+
+@keyframes stagger-fade {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/* ============================================================
+   EASING REFERENCE (commented for copy-paste)
+   ============================================================
+
+   cubic-bezier(0.16, 1, 0.3, 1)     -- Expo Out (premium deceleration)
+   cubic-bezier(0.34, 1.56, 0.64, 1) -- Back Out (slight overshoot, playful)
+   cubic-bezier(0.77, 0, 0.18, 1)    -- Quint InOut (smooth both ways)
+   cubic-bezier(0.22, 1, 0.36, 1)    -- Quint Out (fast start, gentle stop)
+   cubic-bezier(0.4, 0, 0.2, 1)      -- Material standard
+   cubic-bezier(0.0, 0, 0.2, 1)      -- Material deceleration
+   cubic-bezier(0.4, 0, 1, 1)        -- Material acceleration
+
+   RULE: Use Expo Out for entrance animations.
+         Use Back Out for hover interactions.
+         Use Quint InOut for layout transitions.
+   ============================================================ */
+
+
+/* ============================================================
+   DEMO LAYOUT HELPERS
+   ============================================================ */
+.demo-row { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 24px; }
+.demo-section { margin-top: 60px; }
+.section-number {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+</style>
+</head>
+<body>
+
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<section style="text-align:center; padding-top:120px;">
+  <div class="stagger-in">
+    <div class="chip" style="margin-bottom:24px;">Premium CSS Toolkit</div>
+    <h1 class="text-reveal">
+      <span>Dark&nbsp;</span><span>Mode&nbsp;</span><span>That&nbsp;</span><span>Wins&nbsp;</span><span>Deals</span>
+    </h1>
+    <p class="desc" style="margin:20px auto 32px;">
+      10 production-ready CSS techniques extracted from Linear, Stripe, Vercel, Raycast, Resend, and Apple.
+      Every effect uses your accent color <code>#7C5CFC</code>. Copy-paste into your sales deck.
+    </p>
+    <button class="premium-btn">Get Started &rarr;</button>
+  </div>
+</section>
+
+
+<!-- ============================================================
+     1. ANIMATED GRADIENT ORBS
+     ============================================================ -->
+<section>
+  <div class="section-number">Technique 01</div>
+  <h2>Animated Gradient Orbs</h2>
+  <h3>Floating radial gradient blobs with a rotating conic layer</h3>
+  <p class="desc">
+    Three radial-gradient circles animated on different timings, wrapped in a container
+    with <code>filter: blur(80px)</code> for GPU-accelerated diffusion. A conic-gradient overlay
+    rotates using <code>@property</code> angle interpolation.
+  </p>
+
+  <div class="orb-container grain-overlay">
+    <div class="orb-blur-layer">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
+    </div>
+    <div class="rotating-conic"></div>
+    <div class="orb-content">
+      <div>
+        <h2 class="animated-gradient-text" style="font-size:2.5rem;">Omnichannel Pipeline</h2>
+        <p style="color:var(--text-secondary); margin-top:8px;">Your content floats above the gradient mesh</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================================================
+     2. CARD GLOW ON HOVER
+     ============================================================ -->
+<section>
+  <div class="section-number">Technique 02</div>
+  <h2>Cursor-Following Card Glow</h2>
+  <h3>Radial gradient mask tracks mouse position via CSS variables</h3>
+  <p class="desc">
+    A single <code>pointermove</code> listener on the grid sets <code>--mouse-x</code> and <code>--mouse-y</code>.
+    The glow is a radial-gradient on a pseudo-element, masked to follow the cursor.
+    The 1px grid gap acts as the "border" between cards.
+  </p>
+
+  <div class="glow-cards" id="glowGrid">
+    <div class="glow-card">
+      <h4>Cold Email</h4>
+      <p>AI-personalized sequences reaching 2,200+ inboxes per month with 45%+ open rates.</p>
+    </div>
+    <div class="glow-card">
+      <h4>Cold Call</h4>
+      <p>Parallel dialer with trained SDRs hitting 6-8% connect rates on verified numbers.</p>
+    </div>
+    <div class="glow-card">
+      <h4>LinkedIn DMs</h4>
+      <p>Authority-first outreach backed by content that builds trust before the first touch.</p>
+    </div>
+    <div class="glow-card">
+      <h4>Intent Data</h4>
+      <p>Real-time buyer signals from 16,000+ sources identifying who is in-market right now.</p>
+    </div>
+    <div class="glow-card">
+      <h4>Enrichment</h4>
+      <p>Triple-verified contact data with 95%+ deliverability guarantee on every lead.</p>
+    </div>
+    <div class="glow-card">
+      <h4>Booking Engine</h4>
+      <p>AI qualifies and routes leads directly to your calendar. No SDR needed.</p>
+    </div>
+  </div>
+
+  <div class="gradient-border-card">
+    <h4 style="margin-bottom:8px;">Animated Rotating Border</h4>
+    <p style="color:var(--text-secondary); font-size:0.9rem;">
+      Hover this card. The border uses a <code>conic-gradient</code> with <code>@property</code> angle
+      animation and <code>mask-composite: exclude</code> to show only the 1px border.
+    </p>
+  </div>
+</section>
+
+
+<!-- ============================================================
+     3. ANIMATED STAT COUNTERS
+     ============================================================ -->
+<section>
+  <div class="section-number">Technique 03</div>
+  <h2>Animated Stat Counters</h2>
+  <h3>CSS @property integers with expo-out easing, triggered on scroll</h3>
+  <p class="desc">
+    Uses <code>@property --stat</code> with <code>syntax: "&lt;integer&gt;"</code> so CSS can interpolate
+    whole numbers. The easing <code>cubic-bezier(0.16, 1, 0.3, 1)</code> (Expo Out) makes the
+    numbers decelerate sharply at the end, feeling weighty and premium.
+    Staggered delays add rhythm.
+  </p>
+
+  <div class="stats-grid" id="statsGrid">
+    <div class="stat-card">
+      <div class="stat-number s1"></div>
+      <div class="stat-label">Active Clients</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number s2"><span class="stat-suffix">+</span></div>
+      <div class="stat-label">Leads / Month</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number s3"><span class="stat-prefix">$</span></div>
+      <div class="stat-label">Avg CAC</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number s4"></div>
+      <div class="stat-label">Deals Closed (Q1)</div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================================================
+     4. PIPELINE FLOW DIAGRAM
+     ============================================================ -->
+<section>
+  <div class="section-number">Technique 04</div>
+  <h2>Pipeline Flow Diagram</h2>
+  <h3>Animated connecting lines with traveling light pulses and glowing nodes</h3>
+  <p class="desc">
+    Each connector has a pseudo-element gradient "light" that translates from left to right
+    with staggered <code>animation-delay</code>. Nodes have a pulsing radial-gradient glow
+    on <code>::before</code>.
+  </p>
+
+  <div class="pipeline">
+    <div class="pipeline-node">
+      <div class="node-icon">&#x2709;</div>
+      <div class="node-label">Email</div>
+    </div>
+    <div class="pipeline-connector"></div>
+    <div class="pipeline-node">
+      <div class="node-icon">&#x1F50D;</div>
+      <div class="node-label">Detect</div>
+    </div>
+    <div class="pipeline-connector"></div>
+    <div class="pipeline-node">
+      <div class="node-icon">&#x260E;</div>
+      <div class="node-label">Call</div>
+    </div>
+    <div class="pipeline-connector"></div>
+    <div class="pipeline-node">
+      <div class="node-icon">&#x2714;</div>
+      <div class="node-label">Qualify</div>
+    </div>
+    <div class="pipeline-connector"></div>
+    <div class="pipeline-node">
+      <div class="node-icon">&#x1F4C5;</div>
+      <div class="node-label">Book</div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================================================
+     5. TEXT EFFECTS
+     ============================================================ -->
+<section>
+  <div class="section-number">Technique 05</div>
+  <h2>Text Effects</h2>
+  <h3>Gradient text, shimmer, reveal animations, and headline glow</h3>
+
+  <div class="demo-section">
+    <p style="color:var(--text-tertiary); font-size:0.75rem; margin-bottom:8px;">SHIMMER GRADIENT</p>
+    <h2 class="gradient-text" style="font-size:2.5rem;">Your Pipeline, Automated</h2>
+  </div>
+
+  <div class="demo-section">
+    <p style="color:var(--text-tertiary); font-size:0.75rem; margin-bottom:8px;">FLOWING MULTI-COLOR</p>
+    <h2 class="animated-gradient-text" style="font-size:2.5rem;">20-30 Qualified Leads Every Month</h2>
+  </div>
+
+  <div class="demo-section">
+    <p style="color:var(--text-tertiary); font-size:0.75rem; margin-bottom:8px;">CLIP-PATH REVEAL</p>
+    <h2 class="clip-reveal" style="font-size:2.5rem;">Revenue on Autopilot</h2>
+  </div>
+
+  <div class="demo-section">
+    <p style="color:var(--text-tertiary); font-size:0.75rem; margin-bottom:8px;">HEADLINE GLOW</p>
+    <h2 class="headline-glow" data-text="Close More Deals" style="font-size:2.5rem;">Close More Deals</h2>
+  </div>
+</section>
+
+
+<!-- ============================================================
+     6. NOISE / GRAIN TEXTURE
+     ============================================================ -->
+<section>
+  <div class="section-number">Technique 06</div>
+  <h2>Noise &amp; Grain Texture</h2>
+  <h3>SVG feTurbulence as data URI, applied as pseudo-element overlay</h3>
+  <p class="desc">
+    The grain is already applied globally via <code>body::before</code> at <code>opacity: 0.03</code>.
+    For individual elements, add class <code>grain-overlay</code> for <code>opacity: 0.06</code>.
+    The <code>baseFrequency</code> of 0.65-0.7 creates fine film grain. Keep it between 0.03-0.08 opacity.
+  </p>
+
+  <div class="demo-row">
+    <div style="flex:1; padding:40px; border-radius:12px; background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.15), rgba(var(--accent-rgb), 0.03)); position:relative;" class="grain-overlay">
+      <h4>With grain overlay</h4>
+      <p style="color:var(--text-secondary); font-size:0.85rem; margin-top:8px;">Notice the subtle texture that prevents the flat "digital void" look.</p>
+    </div>
+    <div style="flex:1; padding:40px; border-radius:12px; background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.15), rgba(var(--accent-rgb), 0.03));">
+      <h4>Without grain</h4>
+      <p style="color:var(--text-secondary); font-size:0.85rem; margin-top:8px;">Feels flat and synthetic in comparison. The difference is subtle but real.</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================================================
+     7. MICRO-INTERACTIONS
+     ============================================================ -->
+<section>
+  <div class="section-number">Technique 07</div>
+  <h2>Micro-Interactions</h2>
+  <h3>The easing curves, timing, and transitions that feel premium</h3>
+  <p class="desc">
+    Three rules: (1) Never use <code>ease</code> or <code>linear</code> for UI transitions, always use
+    custom cubic-bezier. (2) Give each property its own duration. (3) Use <code>translateY(-1px)</code>
+    not <code>-4px</code> for subtle lift.
+  </p>
+
+  <div class="demo-row">
+    <button class="premium-btn">Primary Action &rarr;</button>
+    <div class="chip">&#x2728; New Feature</div>
+    <a href="#" class="premium-link" onclick="return false;">Learn more about our results</a>
+    <span class="icon-rotate" style="font-size:1.5rem; cursor:pointer;">&#x2699;</span>
+  </div>
+
+  <div class="demo-row" style="margin-top:32px;">
+    <div class="magnetic-card" style="flex:1;">
+      <h4>Hover this card</h4>
+      <p style="color:var(--text-secondary); font-size:0.85rem; margin-top:8px;">
+        The lift uses <code>cubic-bezier(0.16, 1, 0.3, 1)</code> (Expo Out) for the transform
+        and a separate 0.3s ease for the border-color. Feels responsive, not springy.
+      </p>
+    </div>
+    <div class="magnetic-card" style="flex:1;">
+      <h4>Timing matters</h4>
+      <p style="color:var(--text-secondary); font-size:0.85rem; margin-top:8px;">
+        Enter transitions: 0.3-0.4s. Exit transitions: 0.2-0.3s. Stagger delays: 60-100ms.
+        Hover lifts: 1-4px max. Box-shadow spread on hover: 20-40px.
+      </p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================================================
+     8. COLOR THEORY - ONE ACCENT COLOR
+     ============================================================ -->
+<section>
+  <div class="section-number">Technique 08</div>
+  <h2>Color Theory: One Accent, Many Applications</h2>
+  <h3>How to make #7C5CFC feel rich through opacity, glow, and gradient</h3>
+  <p class="desc">
+    Never use more than one hue in your accent system. Instead, use your single purple at
+    7 different opacities for 7 different purposes. The eye reads this as "rich and consistent"
+    rather than "designed by committee."
+  </p>
+
+  <div class="color-demo">
+    <div class="color-swatch swatch-bg">8% opacity<br>Surface tint</div>
+    <div class="color-swatch swatch-card">15% opacity<br>Container fill</div>
+    <div class="color-swatch swatch-border">25% opacity<br>Borders</div>
+    <div class="color-swatch swatch-glow">40% opacity<br>Box-shadow glow</div>
+    <div class="color-swatch swatch-label">60% opacity<br>Labels</div>
+    <div class="color-swatch swatch-full">100% solid<br>Buttons / CTAs</div>
+    <div class="color-swatch swatch-gradient">Gradient 20%>5%<br>Card backgrounds</div>
+  </div>
+</section>
+
+
+<!-- ============================================================
+     9. WOW FACTOR TECHNIQUES
+     ============================================================ -->
+<section>
+  <div class="section-number">Technique 09</div>
+  <h2>Wow Factor: 5 Combined Techniques</h2>
+  <h3>Mesh background, spotlight, glassmorphism, auto-glow border, staggered entrance</h3>
+
+  <!-- A: Mesh gradient background -->
+  <div class="mesh-bg grain-overlay" style="margin-bottom:24px;">
+    <div style="position:relative; z-index:2; padding:60px 40px; text-align:center;">
+      <h2 class="animated-gradient-text" style="font-size:2rem;">Mesh Gradient Background</h2>
+      <p style="color:var(--text-secondary); margin-top:8px;">Three overlapping radial-gradients with animated blur and scale shift.</p>
+    </div>
+  </div>
+
+  <!-- B: Spotlight hero -->
+  <div class="spotlight-hero" id="spotlightHero" style="margin-bottom:24px;">
+    <div style="text-align:center; position:relative; z-index:2;">
+      <h2 style="font-size:2rem;">Move your cursor here</h2>
+      <p style="color:var(--text-secondary); margin-top:8px;">An 800px radial gradient follows your mouse at <code>rgba(accent, 0.08)</code>.</p>
+    </div>
+  </div>
+
+  <!-- C: Glassmorphism over orbs -->
+  <div class="orb-container" style="height:300px; margin-bottom:24px;">
+    <div class="orb-blur-layer">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+    </div>
+    <div class="orb-content">
+      <div class="glass-card" style="max-width:400px; text-align:center;">
+        <h4>Glassmorphism</h4>
+        <p style="color:var(--text-secondary); font-size:0.85rem; margin-top:8px;">
+          <code>backdrop-filter: blur(20px) saturate(1.3)</code> over animated gradient orbs.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- D: Auto-glow border card -->
+  <div class="auto-glow-card">
+    <h4>Auto-Rotating Glow Border</h4>
+    <p style="color:var(--text-secondary); font-size:0.9rem; margin-top:8px;">
+      No hover needed. A <code>conic-gradient</code> rotates via <code>@property</code> angle animation behind the card.
+      The inner <code>::after</code> covers the fill so only the 1px edge glows.
+    </p>
+  </div>
+</section>
+
+
+<!-- ============================================================
+     10. COMPLETE REFERENCE - EASING + TIMING
+     ============================================================ -->
+<section style="border-bottom:none;">
+  <div class="section-number">Technique 10</div>
+  <h2>Easing &amp; Timing Cheat Sheet</h2>
+  <h3>The exact values that separate amateur from world-class</h3>
+
+  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:24px; margin-top:24px;">
+    <div class="magnetic-card">
+      <h4 style="margin-bottom:16px; color:var(--accent-light);">Easing Curves</h4>
+      <div style="font-size:0.85rem; color:var(--text-secondary); line-height:2.2;">
+        <code>cubic-bezier(0.16, 1, 0.3, 1)</code> Expo Out<br>
+        <code>cubic-bezier(0.34, 1.56, 0.64, 1)</code> Back Out<br>
+        <code>cubic-bezier(0.77, 0, 0.18, 1)</code> Quint InOut<br>
+        <code>cubic-bezier(0.22, 1, 0.36, 1)</code> Quint Out<br>
+        <code>cubic-bezier(0.4, 0, 0.2, 1)</code> Material Std<br>
+        <code>cubic-bezier(0.0, 0, 0.2, 1)</code> Material Decel
+      </div>
+    </div>
+    <div class="magnetic-card">
+      <h4 style="margin-bottom:16px; color:var(--accent-light);">Timing Rules</h4>
+      <div style="font-size:0.85rem; color:var(--text-secondary); line-height:2.2;">
+        Hover enter: <code>0.3s</code><br>
+        Hover exit: <code>0.2s</code><br>
+        Page entrance: <code>0.6-0.8s</code><br>
+        Stagger delay: <code>60-100ms</code><br>
+        Stat counters: <code>2.0-2.5s</code><br>
+        Background shift: <code>12-20s</code><br>
+        Glow border rotation: <code>4-6s</code><br>
+        Light pulse travel: <code>2-3s</code>
+      </div>
+    </div>
+  </div>
+
+  <div class="magnetic-card" style="margin-top:24px;">
+    <h4 style="margin-bottom:16px; color:var(--accent-light);">Box-Shadow Stack (3-layer depth)</h4>
+    <div style="font-size:0.85rem; color:var(--text-secondary); line-height:2;">
+      <code>box-shadow:</code><br>
+      &nbsp;&nbsp;<code>0 0 20px rgba(124,92,252, 0.3),</code> inner glow<br>
+      &nbsp;&nbsp;<code>0 8px 30px rgba(124,92,252, 0.15),</code> mid spread<br>
+      &nbsp;&nbsp;<code>0 20px 60px rgba(0,0,0, 0.4);</code> deep shadow
+    </div>
+  </div>
+
+  <div class="magnetic-card" style="margin-top:24px;">
+    <h4 style="margin-bottom:16px; color:var(--accent-light);">Dark Surface Layer System</h4>
+    <div style="font-size:0.85rem; color:var(--text-secondary); line-height:2;">
+      <code>--bg-deep: #08090E</code> page background (never pure #000)<br>
+      <code>--bg-base: #0C0D14</code> section backgrounds<br>
+      <code>--bg-raised: #12131D</code> elevated panels<br>
+      <code>--bg-card: #16172A</code> card surfaces (tinted toward accent)<br>
+      <code>--bg-hover: #1C1D35</code> hover/active states<br>
+      <code>--border: rgba(255,255,255, 0.06)</code> default borders<br>
+      <code>--border-hover: rgba(255,255,255, 0.12)</code> hover borders
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================================================
+     JAVASCRIPT - Mouse tracking + Scroll observer
+     ============================================================ -->
+<script>
+// --- Card glow: track mouse position on the grid ---
+const glowGrid = document.getElementById('glowGrid');
+if (glowGrid) {
+  glowGrid.addEventListener('pointermove', (e) => {
+    const rect = glowGrid.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    glowGrid.style.setProperty('--mouse-x', x + 'px');
+    glowGrid.style.setProperty('--mouse-y', y + 'px');
+
+    // Also set on each child card for per-card glow
+    glowGrid.querySelectorAll('.glow-card').forEach(card => {
+      const cardRect = card.getBoundingClientRect();
+      card.style.setProperty('--mouse-x', (e.clientX - cardRect.left) + 'px');
+      card.style.setProperty('--mouse-y', (e.clientY - cardRect.top) + 'px');
+    });
+  });
+}
+
+// --- Spotlight hero: track mouse ---
+const spotlight = document.getElementById('spotlightHero');
+if (spotlight) {
+  spotlight.addEventListener('pointermove', (e) => {
+    const rect = spotlight.getBoundingClientRect();
+    spotlight.style.setProperty('--spot-x', (e.clientX - rect.left) + 'px');
+    spotlight.style.setProperty('--spot-y', (e.clientY - rect.top) + 'px');
+  });
+}
+
+// --- Stat counters: trigger animation on scroll ---
+const statsGrid = document.getElementById('statsGrid');
+if (statsGrid) {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        statsGrid.querySelectorAll('.stat-number').forEach(el => {
+          el.classList.add('animate');
+        });
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.3 });
+  observer.observe(statsGrid);
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ListKit - Omnichannel Outbound System</title>
+<meta name="description" content="Cold email and cold calling, fully managed. 20-30 qualified leads per month at $6,000/month. Powering 2,200+ B2B companies.">
+<meta name="theme-color" content="#0f1729">
+<meta property="og:title" content="ListKit - Omnichannel Outbound System">
+<meta property="og:description" content="Cold email and cold calling, fully managed. Meetings on your calendar. $6,000/month, everything included.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f1729;
+  --card: #152036;
+  --border: #2d3f5b;
+  --primary: #3c83f6;
+  --success: #21c45d;
+  --destructive: #ef4343;
+  --warning: #f59e0b;
+  --text: #fff;
+  --text-2: #94a3b8;
+  --text-3: #a0b0c0;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); overflow: hidden; height: 100vh; width: 100vw; }
+
+h1, h2 { margin: 0; }
+
+.deck { position: relative; width: 100vw; height: 100vh; }
+
+.slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; padding: 48px 80px; opacity: 0; pointer-events: none; transition: opacity 0.4s ease; overflow-y: auto; }
+.slide.active { opacity: 1; pointer-events: auto; }
+
+/* Fixed UI */
+.brand { position: fixed; top: 24px; left: 30px; font-size: 13px; font-weight: 800; color: var(--text-3); letter-spacing: 3px; z-index: 100; }
+.progress-bar { position: fixed; top: 0; left: 0; height: 2px; background: var(--primary); transition: width 0.4s ease; z-index: 100; }
+.slide-counter { position: fixed; bottom: 24px; right: 30px; font-size: 13px; color: var(--text-3); z-index: 100; font-weight: 600; }
+.nav-dots { position: fixed; right: 20px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 10px; z-index: 100; }
+.nav-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); cursor: pointer; transition: all 0.3s; }
+.nav-dot.active { background: var(--primary); transform: scale(1.4); }
+
+/* Type: 6 sizes */
+.t1 { font-size: 48px; font-weight: 900; line-height: 1.1; letter-spacing: -1.5px; }
+.t2 { font-size: 36px; font-weight: 800; line-height: 1.15; letter-spacing: -0.8px; }
+.t-stat { font-size: 44px; font-weight: 900; letter-spacing: -1px; }
+.t-body { font-size: 18px; line-height: 1.6; color: var(--text-2); }
+.t-small { font-size: 15px; color: var(--text-2); }
+.t-caption { font-size: 14px; color: var(--text-3); }
+
+/* Gradient: hero + CTA only */
+.grad { background: linear-gradient(135deg, #3c83f6, #80bfff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+/* Colour */
+.c-primary { color: var(--primary); }
+.c-green { color: var(--success); }
+.c-red { color: var(--destructive); }
+.bold { font-weight: 700; color: var(--text); }
+
+/* Spacing utilities */
+.mb-4 { margin-bottom: 4px; }
+.mb-6 { margin-bottom: 6px; }
+.mb-10 { margin-bottom: 10px; }
+.mb-14 { margin-bottom: 14px; }
+.mb-16 { margin-bottom: 16px; }
+.mb-20 { margin-bottom: 20px; }
+.mt-6 { margin-top: 6px; }
+.mt-8 { margin-top: 8px; }
+.mt-12 { margin-top: 12px; }
+.mt-14 { margin-top: 14px; }
+.mt-20 { margin-top: 20px; }
+.tc { text-align: center; }
+
+/* Tag */
+.tag { display: inline-block; padding: 5px 14px; border-radius: 6px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 14px; border: 1px solid; }
+.tag-b { background: rgba(60,131,246,0.08); color: var(--primary); border-color: rgba(60,131,246,0.2); }
+.tag-g { background: rgba(33,196,93,0.08); color: var(--success); border-color: rgba(33,196,93,0.2); }
+.tag-r { background: rgba(239,67,67,0.08); color: var(--destructive); border-color: rgba(239,67,67,0.2); }
+.tag-o { background: rgba(249,115,22,0.08); color: var(--warning); border-color: rgba(249,115,22,0.2); }
+
+/* Grid */
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 20px; }
+.g3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 20px; }
+.g4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 16px; }
+
+/* Card */
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+.card-r { border-left: 3px solid var(--destructive); }
+.card-b { background: rgba(60,131,246,0.08); border: 1px solid rgba(60,131,246,0.2); border-left: 3px solid var(--primary); }
+.card-g { border-left: 3px solid var(--success); }
+
+/* List */
+ul.fl { list-style: none; margin-top: 10px; }
+ul.fl li { font-size: 18px; padding: 8px 0; border-bottom: 1px solid rgba(45,63,91,0.5); color: var(--text-2); display: flex; align-items: flex-start; gap: 10px; }
+ul.fl li:last-child { border: none; }
+.ic { font-size: 15px; font-weight: 800; flex-shrink: 0; margin-top: 3px; }
+.ic-g { color: var(--success); }
+.ic-r { color: var(--destructive); }
+
+/* Timeline */
+.tl { margin-top: 16px; position: relative; padding-left: 52px; }
+.tl::before { content: ''; position: absolute; left: 15px; top: 0; bottom: 0; width: 1px; background: var(--border); }
+.tl-step { position: relative; padding: 12px 0; }
+.tl-dot { position: absolute; left: -52px; width: 32px; height: 32px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; z-index: 2; }
+.tl-dot-done { background: var(--success); }
+
+/* Tandem */
+.tandem { display: flex; align-items: center; justify-content: center; gap: 16px; margin: 20px 0; }
+.tandem-box { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; text-align: center; flex: 1; max-width: 240px; }
+.tandem-active { border-color: var(--primary); }
+.tandem-done { border-color: var(--success); }
+.tandem-arrow { font-size: 24px; color: var(--primary); }
+
+/* CTA */
+.cta { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 40px; text-align: center; }
+.cta-stats { display: flex; justify-content: center; gap: 48px; margin: 20px 0; }
+.cta-stat { text-align: center; }
+.cta-btn { display: inline-block; margin-top: 20px; padding: 14px 36px; background: var(--primary); color: white; font-size: 15px; font-weight: 700; border-radius: 8px; border: none; cursor: pointer; text-decoration: none; }
+
+/* Semantic helpers */
+.disq { font-weight: 700; color: var(--destructive); }
+.bridge { color: var(--text); font-weight: 600; }
+.pause { margin-top: 14px; text-align: center; font-style: italic; }
+.stat-src { margin-top: 6px; }
+.quote-text { font-style: italic; color: var(--text-2); }
+.quote-attr { font-weight: 700; margin-top: 4px; }
+.savings { margin-top: 6px; font-weight: 600; color: var(--text-2); }
+.ownership { margin-top: 8px; font-weight: 600; color: var(--text); }
+.risk-card { margin-top: 14px; padding: 14px 24px; text-align: center; }
+.cta-sub { max-width: 620px; margin: 10px auto 20px; }
+.section-label { margin-bottom: 6px; }
+.quote-card { margin-top: 14px; padding: 18px 24px; }
+
+/* Audio player */
+.audio-wrap { max-width: 640px; margin: 0 auto; }
+.audio-player { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px 28px; display: flex; align-items: center; gap: 16px; }
+.ap-play { width: 52px; height: 52px; border-radius: 50%; background: var(--primary); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: transform 0.15s, background 0.2s; }
+.ap-play:hover { transform: scale(1.08); background: #5b9af7; }
+.ap-play svg { width: 22px; height: 22px; fill: #fff; }
+.ap-mid { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.ap-bar-wrap { position: relative; height: 6px; background: var(--border); border-radius: 3px; cursor: pointer; }
+.ap-bar { height: 100%; background: var(--primary); border-radius: 3px; width: 0%; transition: width 0.1s linear; }
+.ap-bar-wrap:hover .ap-bar { background: #5b9af7; }
+.ap-times { display: flex; justify-content: space-between; }
+.ap-time { font-size: 12px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.ap-vol { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.ap-vol svg { width: 18px; height: 18px; fill: var(--text-3); }
+.ap-vol-bar { width: 60px; height: 4px; background: var(--border); border-radius: 2px; cursor: pointer; position: relative; }
+.ap-vol-fill { height: 100%; background: var(--text-3); border-radius: 2px; width: 80%; }
+.callout-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 24px; }
+.callout-pill { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; text-align: center; }
+.callout-icon { font-size: 20px; margin-bottom: 6px; }
+.callout-label { font-size: 14px; font-weight: 600; color: var(--text); }
+.kpi-strip { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-top: 28px; }
+.kpi-item { text-align: center; }
+.kpi-val { font-size: 22px; font-weight: 800; color: var(--primary); }
+.kpi-val.green { color: var(--success); }
+.kpi-desc { font-size: 12px; color: var(--text-3); margin-top: 2px; line-height: 1.3; }
+.kpi-divider { width: 100%; height: 1px; background: var(--border); margin-top: 20px; margin-bottom: 4px; }
+@media (max-width: 900px) { .callout-grid { grid-template-columns: repeat(2, 1fr); } .kpi-strip { grid-template-columns: repeat(3, 1fr); gap: 16px; } }
+
+/* Responsive */
+@media (max-width: 1400px) { .g4 { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 1200px) { .slide { padding: 36px 50px; } .t1 { font-size: 40px; } .t2 { font-size: 30px; } .g3 { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 900px) { .slide { padding: 28px 28px; } .t1 { font-size: 32px; } .t2 { font-size: 26px; } .g2, .g3 { grid-template-columns: 1fr; } .tandem { flex-direction: column; } .tandem-arrow { transform: rotate(90deg); } }
+@media (max-height: 768px) { .slide { padding: 32px 60px; } .t-stat { font-size: 36px; } .tl-step { padding: 8px 0; } }
+
+/* Print */
+@media print {
+  body { overflow: visible; height: auto; background: #fff; color: #000; }
+  .slide { position: relative; opacity: 1; pointer-events: auto; page-break-after: always; padding: 32px; }
+  .brand, .progress-bar, .slide-counter, .nav-dots { display: none; }
+  .card { border: 1px solid #ccc; background: #f9f9f9; }
+  .t-stat, .t1, .t2, .t-body, .t-small, .t-caption, .bold { color: #000; -webkit-text-fill-color: #000; }
+  .grad { -webkit-text-fill-color: #2563eb; color: #2563eb; }
+  .c-green { color: #16a34a; } .c-red { color: #dc2626; } .c-primary { color: #2563eb; }
+  .tag { border: 1px solid #999; } .cta-btn { border: 2px solid #2563eb; color: #2563eb; background: transparent; }
+}
+</style>
+</head>
+<body>
+
+<header class="brand" role="banner">LISTKIT</header>
+<div class="progress-bar" id="progressBar"></div>
+<div class="slide-counter" id="slideCounter" aria-live="polite"></div>
+<nav class="nav-dots" id="navDots" aria-label="Slide navigation"></nav>
+
+<main class="deck" id="deck">
+
+<!-- 1: HERO -->
+<section class="slide active" aria-label="Introduction">
+  <span class="tag tag-b">Omnichannel Outbound</span>
+  <h1 class="t1 mb-16">The Omnichannel<br><span class="grad">Outbound System</span></h1>
+  <p class="t-body mb-20">Cold Email + Cold Calling. Fully Managed. Meetings on Your Calendar.</p>
+  <p class="t-body">Powering <span class="bold">2,200+ B2B companies</span>. 4.8/5 on G2 (376 reviews).</p>
+</section>
+
+<!-- 2: QUALIFICATION -->
+<section class="slide" aria-label="Qualification">
+  <span class="tag tag-g">Ideal Fit</span>
+  <h2 class="t2 mb-6">Built for B2B teams tired of hiring SDRs</h2>
+  <p class="t-small mb-4">You passed our application. Here's who we deliver the best results for.</p>
+  <div class="g2">
+    <div>
+      <ul class="fl">
+        <li><span class="ic ic-g">&#10003;</span> You sell B2B with deal sizes above $5K</li>
+        <li><span class="ic ic-g">&#10003;</span> You want qualified meetings, not leads</li>
+        <li><span class="ic ic-g">&#10003;</span> You're tired of hiring, training, and losing SDRs</li>
+        <li><span class="ic ic-g">&#10003;</span> Your TAM is 15,000+ decision makers</li>
+      </ul>
+    </div>
+    <div>
+      <p class="t-body disq mb-4">This is NOT for you if:</p>
+      <ul class="fl">
+        <li><span class="ic ic-r">&#10005;</span> You sell B2C or deal sizes under $2K</li>
+        <li><span class="ic ic-r">&#10005;</span> You can't handle 5+ meetings per month</li>
+        <li><span class="ic ic-r">&#10005;</span> You want a DIY tool, not a managed service</li>
+      </ul>
+    </div>
+  </div>
+  <p class="t-caption pause">Pause: Does this match your situation? What does your outbound look like today?</p>
+</section>
+
+<!-- 3: THE PROBLEM -->
+<section class="slide" aria-label="The Problem">
+  <span class="tag tag-r">The Problem</span>
+  <h2 class="t2">The SDR model is broken</h2>
+  <p class="t-body">Every month you keep an underperforming SDR, you're burning $8-12K in salary alone for 2-4 meetings at best.</p>
+  <div class="g3">
+    <div class="card">
+      <div class="t-stat c-red">52%</div>
+      <div class="t-small">of SDRs quit within 12 months</div>
+      <div class="t-caption stat-src">HubSpot</div>
+    </div>
+    <div class="card">
+      <div class="t-stat c-red">$97-150K</div>
+      <div class="t-small">lost per SDR departure</div>
+      <div class="t-caption stat-src">Bridge Group, SHRM</div>
+    </div>
+    <div class="card">
+      <div class="t-stat c-red">36%</div>
+      <div class="t-small">of B2B companies are reducing or eliminating SDR teams</div>
+      <div class="t-caption stat-src">Emergence Capital / SaaStr survey, 2025</div>
+    </div>
+  </div>
+  <p class="t-body bridge mt-20">Here's what replaced it.</p>
+  <p class="t-caption pause">Pause: How much are you spending on SDRs right now? What's your cost per meeting?</p>
+</section>
+
+<!-- 4: THE SOLUTION -->
+<section class="slide" aria-label="The Solution">
+  <span class="tag tag-b">The Solution</span>
+  <h2 class="t2">One system. Two channels. Each channel makes the other convert.</h2>
+  <p class="t-body">The channels compound. Email warms. Calls close. Together, 287% higher engagement. <span class="t-caption">(Martal 2026, Landbase)</span></p>
+  <div class="tandem">
+    <div class="tandem-box">
+      <div class="t-body bold">Cold Email</div>
+      <div class="t-small">Prospect sees your name</div>
+    </div>
+    <div class="tandem-arrow">&rarr;</div>
+    <div class="tandem-box tandem-active">
+      <div class="t-body bold c-primary">SDR Calls Same Day</div>
+      <div class="t-small">Top of mind. Live conversation.</div>
+    </div>
+    <div class="tandem-arrow">&rarr;</div>
+    <div class="tandem-box tandem-done">
+      <div class="t-body bold c-green">Meeting Booked</div>
+      <div class="t-small">Directly on your calendar.</div>
+    </div>
+  </div>
+  <p class="t-small tc">Proprietary data. AI personalisation. Every campaign trains the next.</p>
+  <p class="t-caption tc mt-8">Tried outbound before and it failed? Single-channel outbound has a 2-3% reply rate. Omnichannel hits 6-8%. The difference is the system, not the strategy.</p>
+</section>
+
+<!-- 5: THE TWO ENGINES -->
+<section class="slide" aria-label="What You Get">
+  <span class="tag tag-b">The Engines</span>
+  <h2 class="t2">What you get for $6K/month</h2>
+  <div class="g2">
+    <div>
+      <p class="t-body bold section-label">Cold Email</p>
+      <ul class="fl">
+        <li><span class="ic ic-g">&#10003;</span> 98.5% inbox placement. 10,000 prospects/month. Dedicated US IPs.</li>
+        <li><span class="ic ic-g">&#10003;</span> AI personalisation. 5-8x the reply rate of generic templates.</li>
+        <li><span class="ic ic-g">&#10003;</span> 700M+ contacts. Triple-verified. Under 1% bounce rate.</li>
+        <li><span class="ic ic-g">&#10003;</span> Main domain protected. You keep all data and domains.</li>
+      </ul>
+      <p class="t-caption mt-8">Niche market? We reduce volume and increase personalisation. TAM mapped before a single email.</p>
+    </div>
+    <div>
+      <p class="t-body bold section-label">Cold Calling</p>
+      <ul class="fl">
+        <li><span class="ic ic-g">&#10003;</span> Dedicated SDR. Neutral American accent. 1,500+ dials/day via parallel dialer.</li>
+        <li><span class="ic ic-g">&#10003;</span> Custom script. Co-written with your team.</li>
+        <li><span class="ic ic-g">&#10003;</span> Real humans. DNC scrubbed. TCPA compliant.</li>
+        <li><span class="ic ic-g">&#10003;</span> SDR leaves? Replaced next day. No extra cost.</li>
+      </ul>
+      <p class="t-caption mt-8">20-30 qualified leads/month. 65-70% show rate. Qualified means they responded, expressed interest, and match your ICP.</p>
+    </div>
+  </div>
+  <p class="t-caption pause">Pause: Which channel matters more to you right now, email or phone?</p>
+</section>
+
+<!-- 6: PROOF -->
+<section class="slide" aria-label="Proof">
+  <span class="tag tag-g">Proof</span>
+  <h2 class="t2">The numbers across 594 verified reviews</h2>
+  <p class="t-body">Rated 4.8/5 on G2. 4/5 on Trustpilot. 2,200+ companies and counting.</p>
+  <div class="g4">
+    <div class="card">
+      <div class="t-stat c-green">$108K</div>
+      <div class="t-caption mb-4">LISTKIT INTERNAL</div>
+      <div class="t-small">$108K MRR in 87 days. 685 meetings booked.</div>
+    </div>
+    <div class="card">
+      <div class="t-stat c-green">156/mo</div>
+      <div class="t-caption mb-4">TRUCKING INSURANCE</div>
+      <div class="t-small">156 leads/month at $30 each.</div>
+    </div>
+    <div class="card">
+      <div class="t-stat c-green">612</div>
+      <div class="t-caption mb-4">CUSTOM MERCHANDISE</div>
+      <div class="t-small">612 leads from one campaign.</div>
+    </div>
+    <div class="card">
+      <div class="t-stat c-green">$46K/mo</div>
+      <div class="t-caption mb-4">COACHING</div>
+      <div class="t-small">$46K/month from cold outbound alone.</div>
+    </div>
+  </div>
+  <div class="card card-g quote-card">
+    <p class="t-body quote-text">"We went from zero outbound to 19 closed deals and $39K cash collected in 90 days. $947 to acquire each customer."</p>
+    <p class="t-small c-green quote-attr">Anthony, IT Services. ListKit client.</p>
+  </div>
+  <p class="t-caption tc mt-12">Here's what it actually costs.</p>
+</section>
+
+<!-- 7: SDR CALL SAMPLE -->
+<section class="slide" aria-label="SDR Call Sample">
+  <span class="tag tag-b">Proof</span>
+  <h2 class="t2 tc mb-6">This is who's calling on your behalf</h2>
+  <p class="t-small tc mb-20">Hit play. This is an actual cold call made by one of our SDRs.</p>
+
+  <div class="audio-wrap">
+    <div class="audio-player" id="audioPlayer">
+      <button class="ap-play" id="apPlay" aria-label="Play audio">
+        <svg id="apPlayIcon" viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg>
+        <svg id="apPauseIcon" viewBox="0 0 24 24" style="display:none"><rect x="5" y="3" width="4" height="18"/><rect x="15" y="3" width="4" height="18"/></svg>
+      </button>
+      <div class="ap-mid">
+        <div class="ap-bar-wrap" id="apBarWrap">
+          <div class="ap-bar" id="apBar"></div>
+        </div>
+        <div class="ap-times">
+          <span class="ap-time" id="apCur">0:00</span>
+          <span class="ap-time" id="apDur">0:00</span>
+        </div>
+      </div>
+      <div class="ap-vol">
+        <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0014 8.5v7a4.49 4.49 0 002.5-3.5zM14 3.23v2.06a6.51 6.51 0 010 13.42v2.06A8.51 8.51 0 0014 3.23z"/></svg>
+        <div class="ap-vol-bar" id="apVolBar">
+          <div class="ap-vol-fill" id="apVolFill"></div>
+        </div>
+      </div>
+    </div>
+    <audio id="apAudio" preload="metadata" src="assets/sdr-call-boosted.mp3"></audio>
+  </div>
+
+  <div class="callout-grid">
+    <div class="callout-pill">
+      <div class="callout-icon">&#127911;</div>
+      <div class="callout-label">Neutral American accent</div>
+    </div>
+    <div class="callout-pill">
+      <div class="callout-icon">&#127919;</div>
+      <div class="callout-label">Trained on YOUR offer</div>
+    </div>
+    <div class="callout-pill">
+      <div class="callout-icon">&#128172;</div>
+      <div class="callout-label">Handles objections live</div>
+    </div>
+    <div class="callout-pill">
+      <div class="callout-icon">&#128197;</div>
+      <div class="callout-label">Books directly to your calendar</div>
+    </div>
+  </div>
+
+  <div class="kpi-divider"></div>
+
+  <div class="kpi-strip">
+    <div class="kpi-item">
+      <div class="kpi-val">1,500+</div>
+      <div class="kpi-desc">dials per day</div>
+    </div>
+    <div class="kpi-item">
+      <div class="kpi-val">6-8%</div>
+      <div class="kpi-desc">live connect rate</div>
+    </div>
+    <div class="kpi-item">
+      <div class="kpi-val">~10%</div>
+      <div class="kpi-desc">connects to leads</div>
+    </div>
+    <div class="kpi-item">
+      <div class="kpi-val green">20-30</div>
+      <div class="kpi-desc">qualified leads/month</div>
+    </div>
+    <div class="kpi-item">
+      <div class="kpi-val green">$947</div>
+      <div class="kpi-desc">average CAC</div>
+    </div>
+    <div class="kpi-item">
+      <div class="kpi-val green">19 deals</div>
+      <div class="kpi-desc">$39K cash in 90 days</div>
+    </div>
+  </div>
+</section>
+
+<!-- 8: INVESTMENT -->
+<section class="slide" aria-label="Investment">
+  <span class="tag tag-o">Investment</span>
+  <h2 class="t2">$6,000/month. Everything included.</h2>
+  <p class="t-body">$18,000/quarter. Billing starts at checkout. No ROI in 90 days? Walk. No questions.</p>
+  <div class="g2">
+    <div class="card card-r">
+      <p class="t-body bold c-red mb-10">Build In-House</p>
+      <ul class="fl">
+        <li><span class="ic ic-r">&#10005;</span> SDR: $60-80K/yr</li>
+        <li><span class="ic ic-r">&#10005;</span> Manager: $80-120K/yr</li>
+        <li><span class="ic ic-r">&#10005;</span> Data: $20-50K/yr</li>
+        <li><span class="ic ic-r">&#10005;</span> Tools + dialer: $9-18K/yr</li>
+        <li><span class="ic ic-r">&#10005;</span> 3-6 months before first meeting. Then 52% quit.</li>
+      </ul>
+      <div class="t-stat c-red mt-12">$186-298K/yr</div>
+    </div>
+    <div class="card card-b">
+      <p class="t-body bold c-primary mb-10">Fully Managed by ListKit</p>
+      <ul class="fl">
+        <li><span class="ic ic-g">&#10003;</span> Data, emails, SDR, dialer, scripts. All included.</li>
+        <li><span class="ic ic-g">&#10003;</span> Live in 14 days, not 3-6 months</li>
+        <li><span class="ic ic-g">&#10003;</span> SDR replacement guarantee</li>
+        <li><span class="ic ic-g">&#10003;</span> AI writes every email. No two prospects get the same message.</li>
+        <li><span class="ic ic-g">&#10003;</span> No ROI in 90 days? Walk. No questions.</li>
+      </ul>
+      <div class="t-stat c-green mt-12">$72K/yr</div>
+      <p class="t-body savings">That's $114-226K back in your pocket. Every year.</p>
+      <p class="t-body ownership">Unlike agencies, you own every domain, contact, and data point. We run the system. You keep the assets.</p>
+    </div>
+  </div>
+  <div class="card card-b risk-card">
+    <p class="t-small c-primary">No ROI in 90 days? No contract. You walk with every asset we built.</p>
+  </div>
+</section>
+
+<!-- 9: ONBOARDING -->
+<section class="slide" aria-label="Onboarding">
+  <span class="tag tag-b">Onboarding</span>
+  <h2 class="t2">Live in 14 days. First meetings by week 3.</h2>
+  <div class="tl">
+    <div class="tl-step">
+      <div class="tl-dot">0</div>
+      <div>
+        <p class="t-body bold">Onboarding Form</p>
+        <p class="t-small">10-minute form. Who you sell to, what makes you different, which companies you want. You purchase sending domains ($100-150) registered in your name.</p>
+      </div>
+    </div>
+    <div class="tl-step">
+      <div class="tl-dot">1</div>
+      <div>
+        <p class="t-body bold">Kickoff + Cold Calling Starts</p>
+        <p class="t-small">Meet your account manager. Align on ICP. SDR starts 1,500+ dials/day via parallel dialer from day 2.</p>
+      </div>
+    </div>
+    <div class="tl-step">
+      <div class="tl-dot">2</div>
+      <div>
+        <p class="t-body bold">Domains Warmed + Target List Built</p>
+        <p class="t-small">Dedicated domains, SPF/DKIM/DMARC, warm-up. Triple-verified list built to your ICP.</p>
+      </div>
+    </div>
+    <div class="tl-step">
+      <div class="tl-dot">3</div>
+      <div>
+        <p class="t-body bold">Campaigns Launch</p>
+        <p class="t-small">AI-personalised emails live. Cold email engine runs 24/7 alongside your SDR.</p>
+      </div>
+    </div>
+    <div class="tl-step">
+      <div class="tl-dot tl-dot-done">&#10003;</div>
+      <div>
+        <p class="t-body bold">Full System Running</p>
+        <p class="t-small">Monthly reporting, strategy sessions, Slack channel, continuous optimisation.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 10: CTA -->
+<section class="slide" aria-label="Next Steps">
+  <div class="cta">
+    <h2 class="t2">Your pipeline starts in <span class="grad">48 hours</span></h2>
+    <p class="t-body cta-sub">Your SDR starts dialing in 48 hours. First meetings by week 3. Sign the agreement, fill out a 10-minute form, and we launch.</p>
+    <div class="cta-stats">
+      <div class="cta-stat">
+        <div class="t-stat c-green">14 days</div>
+        <div class="t-caption">to live</div>
+      </div>
+      <div class="cta-stat">
+        <div class="t-stat c-primary">$947</div>
+        <div class="t-caption">average customer acquisition cost</div>
+      </div>
+      <div class="cta-stat">
+        <div class="t-stat c-green">$72K/yr</div>
+        <div class="t-caption">vs $186-298K in-house</div>
+      </div>
+    </div>
+    <p class="t-small tc">SDR quits? Replaced next day. No ROI in 90 days? Walk. No questions.</p>
+    <a href="https://listkit.chilipiper.com/book/henry-williams" class="cta-btn">Lock In My Pipeline</a>
+    <p class="t-caption tc mt-12">Questions first? Reply to this deck or ask on the call.</p>
+  </div>
+</section>
+
+</main>
+
+<script>
+let current = 0;
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+const dots = [];
+const dotsContainer = document.getElementById('navDots');
+for (let i = 0; i < total; i++) {
+  const dot = document.createElement('div');
+  dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
+  dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+  dot.setAttribute('role', 'button');
+  dot.onclick = () => goTo(i);
+  dotsContainer.appendChild(dot);
+  dots.push(dot);
+}
+function goTo(n) {
+  slides[current].classList.remove('active');
+  dots[current].classList.remove('active');
+  current = Math.max(0, Math.min(n, total - 1));
+  slides[current].classList.add('active');
+  dots[current].classList.add('active');
+  document.getElementById('progressBar').style.width = ((current / (total - 1)) * 100) + '%';
+  document.getElementById('slideCounter').textContent = (current + 1) + ' / ' + total;
+}
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); goTo(current + 1); }
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); goTo(current - 1); }
+  if (e.key === 'Home') goTo(0);
+  if (e.key === 'End') goTo(total - 1);
+  if (e.key === 'Escape') goTo(0);
+});
+let touchStartX = 0;
+document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
+document.addEventListener('touchend', (e) => {
+  const diff = touchStartX - e.changedTouches[0].clientX;
+  if (Math.abs(diff) > 50) { diff > 0 ? goTo(current + 1) : goTo(current - 1); }
+});
+let wt;
+document.addEventListener('wheel', (e) => { e.preventDefault(); if (wt) return; wt = setTimeout(() => { wt = null; }, 300); e.deltaY > 0 ? goTo(current + 1) : goTo(current - 1); }, { passive: false });
+goTo(0);
+
+// Custom audio player
+(function() {
+  const audio = document.getElementById('apAudio');
+  const playBtn = document.getElementById('apPlay');
+  const playIcon = document.getElementById('apPlayIcon');
+  const pauseIcon = document.getElementById('apPauseIcon');
+  const bar = document.getElementById('apBar');
+  const barWrap = document.getElementById('apBarWrap');
+  const curTime = document.getElementById('apCur');
+  const durTime = document.getElementById('apDur');
+  const volBar = document.getElementById('apVolBar');
+  const volFill = document.getElementById('apVolFill');
+  if (!audio) return;
+  function fmt(s) { const m = Math.floor(s / 60); return m + ':' + String(Math.floor(s % 60)).padStart(2, '0'); }
+  audio.addEventListener('loadedmetadata', function() { durTime.textContent = fmt(audio.duration); });
+  audio.addEventListener('timeupdate', function() {
+    if (!audio.duration) return;
+    bar.style.width = (audio.currentTime / audio.duration * 100) + '%';
+    curTime.textContent = fmt(audio.currentTime);
+  });
+  audio.addEventListener('ended', function() { playIcon.style.display = ''; pauseIcon.style.display = 'none'; });
+  playBtn.addEventListener('click', function() {
+    if (audio.paused) { audio.play(); playIcon.style.display = 'none'; pauseIcon.style.display = ''; }
+    else { audio.pause(); playIcon.style.display = ''; pauseIcon.style.display = 'none'; }
+  });
+  barWrap.addEventListener('click', function(e) {
+    var rect = barWrap.getBoundingClientRect();
+    audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
+  });
+  volBar.addEventListener('click', function(e) {
+    var rect = volBar.getBoundingClientRect();
+    var v = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    audio.volume = v;
+    volFill.style.width = (v * 100) + '%';
+  });
+})();
+</script>
+
+</body>
+</html>

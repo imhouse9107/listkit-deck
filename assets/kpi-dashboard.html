@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<title>ListKit KPI Dashboard</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 1920px;
+    height: 1080px;
+    background: #0f1729;
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: #ffffff;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Subtle grid background */
+  body::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(60,131,246,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(60,131,246,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+
+  .slide {
+    width: 1920px;
+    height: 1080px;
+    padding: 48px 56px 40px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+  }
+
+  .header h1 {
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+
+  .header h1 span { color: #3c83f6; }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .badge {
+    background: rgba(33,196,93,0.12);
+    border: 1px solid rgba(33,196,93,0.3);
+    color: #21c45d;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 16px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .badge::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    background: #21c45d;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .data-source {
+    color: #94a3b8;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  /* Main grid */
+  .dashboard {
+    display: grid;
+    grid-template-columns: 320px 1fr 320px;
+    grid-template-rows: 1fr;
+    gap: 24px;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* Card base */
+  .card {
+    background: #152036;
+    border: 1px solid #2d3f5b;
+    border-radius: 14px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #94a3b8;
+    margin-bottom: 20px;
+  }
+
+  /* LEFT COLUMN - SDR Activity */
+  .left-col {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .metric-card {
+    background: #152036;
+    border: 1px solid #2d3f5b;
+    border-radius: 14px;
+    padding: 22px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .metric-card .label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #94a3b8;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+
+  .metric-card .value {
+    font-size: 40px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+
+  .metric-card .sub {
+    font-size: 13px;
+    color: #94a3b8;
+    margin-top: 6px;
+    font-weight: 500;
+  }
+
+  .metric-card .value.blue { color: #3c83f6; }
+  .metric-card .value.green { color: #21c45d; }
+  .metric-card .value.white { color: #ffffff; }
+
+  /* Glow effects */
+  .metric-card.glow-blue::after {
+    content: '';
+    position: absolute;
+    top: -30px;
+    right: -30px;
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, rgba(60,131,246,0.15), transparent 70%);
+    pointer-events: none;
+  }
+
+  .metric-card.glow-green::after {
+    content: '';
+    position: absolute;
+    top: -30px;
+    right: -30px;
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, rgba(33,196,93,0.15), transparent 70%);
+    pointer-events: none;
+  }
+
+  /* Progress bar */
+  .progress-wrap {
+    margin-top: 14px;
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 6px;
+    background: #1e2d4a;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 1s ease;
+  }
+
+  .progress-fill.blue { background: linear-gradient(90deg, #3c83f6, #60a5fa); }
+  .progress-fill.green { background: linear-gradient(90deg, #21c45d, #4ade80); }
+
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #94a3b8;
+    margin-top: 5px;
+    font-weight: 500;
+  }
+
+  /* CENTER - Funnel */
+  .center-col {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .funnel-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .funnel-visual {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0;
+    padding: 10px 0;
+  }
+
+  .funnel-stage {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    position: relative;
+  }
+
+  .funnel-bar-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .funnel-bar {
+    height: 52px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 16px;
+    position: relative;
+    transition: all 0.3s;
+    margin-bottom: 4px;
+  }
+
+  .funnel-bar .bar-label {
+    position: absolute;
+    white-space: nowrap;
+  }
+
+  .funnel-connector {
+    width: 2px;
+    height: 16px;
+    background: #2d3f5b;
+    margin: 0 auto;
+  }
+
+  .funnel-stage-info {
+    width: 180px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .funnel-stage-info .stage-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #e2e8f0;
+  }
+
+  .funnel-stage-info .stage-metric {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-top: 2px;
+  }
+
+  .funnel-stage-value {
+    width: 120px;
+    flex-shrink: 0;
+  }
+
+  .funnel-stage-value .big-num {
+    font-size: 28px;
+    font-weight: 800;
+    color: #3c83f6;
+    line-height: 1;
+  }
+
+  .funnel-stage-value .big-num.green { color: #21c45d; }
+
+  .funnel-stage-value .unit {
+    font-size: 11px;
+    color: #94a3b8;
+    font-weight: 500;
+  }
+
+  /* Conversion arrow between stages */
+  .conversion-row {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 2px 0;
+  }
+
+  .conversion-row .spacer { width: 180px; flex-shrink: 0; }
+
+  .conversion-arrow {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .conversion-arrow .line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #2d3f5b, transparent);
+  }
+
+  .conversion-arrow .rate {
+    font-size: 12px;
+    font-weight: 700;
+    color: #f59e0b;
+    background: rgba(245,158,11,0.1);
+    border: 1px solid rgba(245,158,11,0.2);
+    padding: 3px 10px;
+    border-radius: 12px;
+    white-space: nowrap;
+  }
+
+  .conversion-row .spacer-right { width: 120px; flex-shrink: 0; }
+
+  /* Bottom row */
+  .bottom-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(45,63,91,0.5);
+  }
+
+  .stat-row:last-child { border-bottom: none; }
+
+  .stat-row .stat-label {
+    font-size: 13px;
+    color: #94a3b8;
+    font-weight: 500;
+  }
+
+  .stat-row .stat-value {
+    font-size: 15px;
+    font-weight: 700;
+    color: #ffffff;
+  }
+
+  .stat-row .stat-value.green { color: #21c45d; }
+  .stat-row .stat-value.blue { color: #3c83f6; }
+
+  /* RIGHT COLUMN - Results */
+  .right-col {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .result-hero {
+    text-align: center;
+    padding: 28px 24px;
+    background: linear-gradient(135deg, rgba(33,196,93,0.08), rgba(60,131,246,0.08));
+    border-color: rgba(33,196,93,0.25);
+  }
+
+  .result-hero .hero-value {
+    font-size: 56px;
+    font-weight: 800;
+    color: #21c45d;
+    letter-spacing: -2px;
+    line-height: 1;
+  }
+
+  .result-hero .hero-label {
+    font-size: 14px;
+    color: #94a3b8;
+    margin-top: 6px;
+    font-weight: 500;
+  }
+
+  .result-hero .hero-sub {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 4px;
+  }
+
+  .result-detail {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid rgba(45,63,91,0.5);
+  }
+
+  .result-detail:last-child { border-bottom: none; }
+
+  .result-detail .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 4px;
+  }
+
+  .result-detail .dot.green { background: #21c45d; }
+  .result-detail .dot.blue { background: #3c83f6; }
+  .result-detail .dot.amber { background: #f59e0b; }
+
+  .result-detail .detail-text {
+    flex: 1;
+  }
+
+  .result-detail .detail-value {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .result-detail .detail-label {
+    font-size: 11px;
+    color: #94a3b8;
+    font-weight: 500;
+    margin-top: 2px;
+  }
+
+  /* Operational timeline */
+  .timeline-card {
+    padding: 20px 24px;
+  }
+
+  .timeline {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-top: 16px;
+    position: relative;
+  }
+
+  .timeline-line {
+    position: absolute;
+    top: 50%;
+    left: 24px;
+    right: 24px;
+    height: 3px;
+    background: linear-gradient(90deg, #3c83f6, #21c45d);
+    border-radius: 2px;
+    transform: translateY(-50%);
+    z-index: 0;
+  }
+
+  .timeline-node {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .timeline-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 3px solid;
+    background: #152036;
+  }
+
+  .timeline-dot.blue { border-color: #3c83f6; }
+  .timeline-dot.green { border-color: #21c45d; }
+
+  .timeline-text {
+    text-align: center;
+    margin-top: 10px;
+  }
+
+  .timeline-text .t-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #e2e8f0;
+  }
+
+  .timeline-text .t-sub {
+    font-size: 10px;
+    color: #94a3b8;
+    margin-top: 2px;
+  }
+
+  /* Donut chart (CSS-only) */
+  .donut-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    padding: 10px 0;
+  }
+
+  .donut {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: conic-gradient(
+      #3c83f6 0deg 230deg,
+      #21c45d 230deg 280deg,
+      #f59e0b 280deg 310deg,
+      #1e2d4a 310deg 360deg
+    );
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .donut::after {
+    content: '';
+    position: absolute;
+    inset: 20px;
+    border-radius: 50%;
+    background: #152036;
+  }
+
+  .donut-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    font-size: 18px;
+    font-weight: 800;
+    color: #ffffff;
+  }
+
+  .donut-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: #94a3b8;
+    font-weight: 500;
+  }
+
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+<div class="slide">
+
+  <!-- Header -->
+  <div class="header">
+    <h1>Performance <span>Dashboard</span></h1>
+    <div class="header-right">
+      <div class="badge">Live Benchmarks</div>
+      <div class="data-source">Source: 2,200+ ListKit accounts</div>
+    </div>
+  </div>
+
+  <!-- Dashboard Grid -->
+  <div class="dashboard">
+
+    <!-- LEFT COLUMN: SDR Activity -->
+    <div class="left-col">
+      <div class="metric-card glow-blue">
+        <div class="label">SDR Dials / Day</div>
+        <div class="value blue">~1,500</div>
+        <div class="sub">Minimum plan capacity</div>
+        <div class="progress-wrap">
+          <div class="progress-bar">
+            <div class="progress-fill blue" style="width: 85%"></div>
+          </div>
+          <div class="progress-label">
+            <span>Daily target</span>
+            <span>1,500 dials</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="metric-card glow-green">
+        <div class="label">Live Connect Rate</div>
+        <div class="value green">6-8%</div>
+        <div class="sub">of total dials answered</div>
+        <div class="progress-wrap">
+          <div class="progress-bar">
+            <div class="progress-fill green" style="width: 70%"></div>
+          </div>
+          <div class="progress-label">
+            <span>Industry avg: 2-3%</span>
+            <span>ListKit: 6-8%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="label">Connects to Leads</div>
+        <div class="value white">~10%</div>
+        <div class="sub">Live conversations that convert</div>
+        <div class="progress-wrap">
+          <div class="progress-bar">
+            <div class="progress-fill blue" style="width: 50%"></div>
+          </div>
+          <div class="progress-label">
+            <span>Conversion</span>
+            <span>1 in 10</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Donut: Activity breakdown -->
+      <div class="metric-card" style="flex: 1;">
+        <div class="label">Activity Breakdown</div>
+        <div class="donut-wrap">
+          <div class="donut">
+            <div class="donut-center">1,500</div>
+          </div>
+          <div class="donut-legend">
+            <div class="legend-item">
+              <div class="legend-dot" style="background: #3c83f6;"></div>
+              No answer (64%)
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background: #21c45d;"></div>
+              Connects (7%)
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background: #f59e0b;"></div>
+              Voicemails (8%)
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background: #1e2d4a; border: 1px solid #2d3f5b;"></div>
+              Other (21%)
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CENTER: Funnel Visualization -->
+    <div class="center-col">
+      <div class="card funnel-card">
+        <div class="card-title">Omnichannel Conversion Funnel</div>
+        <div class="funnel-visual">
+
+          <!-- Stage 1: Contacts -->
+          <div class="funnel-stage">
+            <div class="funnel-stage-info">
+              <div class="stage-name">Contacts Reached</div>
+              <div class="stage-metric">Per campaign cycle</div>
+            </div>
+            <div class="funnel-bar-wrap">
+              <div class="funnel-bar" style="width: 100%; background: linear-gradient(90deg, rgba(60,131,246,0.25), rgba(60,131,246,0.1)); border: 1px solid rgba(60,131,246,0.3);">
+                <span class="bar-label" style="color: #60a5fa;">3,000 - 5,000 contacts</span>
+              </div>
+            </div>
+            <div class="funnel-stage-value">
+              <div class="big-num">3-5K</div>
+              <div class="unit">contacts</div>
+            </div>
+          </div>
+
+          <!-- Conversion -->
+          <div class="conversion-row">
+            <div class="spacer"></div>
+            <div class="conversion-arrow">
+              <div class="line"></div>
+              <div class="rate">1 per 250-500</div>
+              <div class="line"></div>
+            </div>
+            <div class="spacer-right"></div>
+          </div>
+
+          <!-- Stage 2: Qualified Leads -->
+          <div class="funnel-stage">
+            <div class="funnel-stage-info">
+              <div class="stage-name">Qualified Leads</div>
+              <div class="stage-metric">Monthly average</div>
+            </div>
+            <div class="funnel-bar-wrap">
+              <div class="funnel-bar" style="width: 65%; background: linear-gradient(90deg, rgba(60,131,246,0.35), rgba(60,131,246,0.15)); border: 1px solid rgba(60,131,246,0.4);">
+                <span class="bar-label" style="color: #93bbfd;">20 - 30 leads/month</span>
+              </div>
+            </div>
+            <div class="funnel-stage-value">
+              <div class="big-num">20-30</div>
+              <div class="unit">leads / mo</div>
+            </div>
+          </div>
+
+          <!-- Conversion -->
+          <div class="conversion-row">
+            <div class="spacer"></div>
+            <div class="conversion-arrow">
+              <div class="line"></div>
+              <div class="rate">~1 in 3</div>
+              <div class="line"></div>
+            </div>
+            <div class="spacer-right"></div>
+          </div>
+
+          <!-- Stage 3: Booked Calls -->
+          <div class="funnel-stage">
+            <div class="funnel-stage-info">
+              <div class="stage-name">Booked Calls</div>
+              <div class="stage-metric">From qualified leads</div>
+            </div>
+            <div class="funnel-bar-wrap">
+              <div class="funnel-bar" style="width: 38%; background: linear-gradient(90deg, rgba(60,131,246,0.45), rgba(33,196,93,0.2)); border: 1px solid rgba(60,131,246,0.5);">
+                <span class="bar-label" style="color: #c4e0ff;">7 - 10 calls</span>
+              </div>
+            </div>
+            <div class="funnel-stage-value">
+              <div class="big-num">7-10</div>
+              <div class="unit">calls / mo</div>
+            </div>
+          </div>
+
+          <!-- Conversion -->
+          <div class="conversion-row">
+            <div class="spacer"></div>
+            <div class="conversion-arrow">
+              <div class="line"></div>
+              <div class="rate">~25% close</div>
+              <div class="line"></div>
+            </div>
+            <div class="spacer-right"></div>
+          </div>
+
+          <!-- Stage 4: Deals Closed -->
+          <div class="funnel-stage">
+            <div class="funnel-stage-info">
+              <div class="stage-name">Deals Closed</div>
+              <div class="stage-metric">Per 3-5K contacts</div>
+            </div>
+            <div class="funnel-bar-wrap">
+              <div class="funnel-bar" style="width: 18%; background: linear-gradient(90deg, rgba(33,196,93,0.4), rgba(33,196,93,0.2)); border: 1px solid rgba(33,196,93,0.5);">
+                <span class="bar-label" style="color: #4ade80;">Closed</span>
+              </div>
+            </div>
+            <div class="funnel-stage-value">
+              <div class="big-num green">1-2</div>
+              <div class="unit">deals / cycle</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Bottom row: Operational + Timeline -->
+      <div class="bottom-cards">
+        <div class="card timeline-card">
+          <div class="card-title">Go-Live Timeline</div>
+          <div class="timeline">
+            <div class="timeline-line"></div>
+            <div class="timeline-node">
+              <div class="timeline-dot blue"></div>
+              <div class="timeline-text">
+                <div class="t-label">Day 1</div>
+                <div class="t-sub">Sign up</div>
+              </div>
+            </div>
+            <div class="timeline-node">
+              <div class="timeline-dot blue"></div>
+              <div class="timeline-text">
+                <div class="t-label">Day 10-14</div>
+                <div class="t-sub">Campaigns live</div>
+              </div>
+            </div>
+            <div class="timeline-node">
+              <div class="timeline-dot green"></div>
+              <div class="timeline-text">
+                <div class="t-label">Day 14+</div>
+                <div class="t-sub">Billing starts</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="padding: 20px 24px;">
+          <div class="card-title">Key Ratios</div>
+          <div class="stat-row">
+            <span class="stat-label">Lead per contacts</span>
+            <span class="stat-value blue">1 : 250-500</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Lead to call</span>
+            <span class="stat-value blue">1 in 3</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Call to close</span>
+            <span class="stat-value green">~25%</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Billing start</span>
+            <span class="stat-value">Day 1 live</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: ListKit Results -->
+    <div class="right-col">
+      <div class="metric-card result-hero">
+        <div class="label" style="text-align: center;">ListKit's Own Results</div>
+        <div class="hero-value">$39K</div>
+        <div class="hero-label">Cash collected in ~3 months</div>
+        <div class="hero-sub">From cold calling alone</div>
+      </div>
+
+      <div class="metric-card" style="flex: 1;">
+        <div class="label">Performance Breakdown</div>
+        <div class="result-detail">
+          <div class="dot green"></div>
+          <div class="detail-text">
+            <div class="detail-value" style="color: #21c45d;">19 deals</div>
+            <div class="detail-label">Closed from cold calling, ~3 months</div>
+          </div>
+        </div>
+        <div class="result-detail">
+          <div class="dot blue"></div>
+          <div class="detail-text">
+            <div class="detail-value" style="color: #3c83f6;">$947</div>
+            <div class="detail-label">Customer acquisition cost (Minimum plan)</div>
+          </div>
+        </div>
+        <div class="result-detail">
+          <div class="dot amber"></div>
+          <div class="detail-text">
+            <div class="detail-value" style="color: #f59e0b;">~$2,053/deal</div>
+            <div class="detail-label">Average revenue per deal</div>
+          </div>
+        </div>
+        <div class="result-detail">
+          <div class="dot green"></div>
+          <div class="detail-text">
+            <div class="detail-value" style="color: #21c45d;">2.2x</div>
+            <div class="detail-label">Revenue to CAC ratio (min. viable)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="label">Monthly Capacity</div>
+        <div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px;">
+          <span style="font-size: 36px; font-weight: 800; color: #3c83f6;">20-30</span>
+          <span style="font-size: 14px; color: #94a3b8; font-weight: 500;">qualified leads/mo</span>
+        </div>
+        <div class="progress-wrap" style="margin-top: 8px;">
+          <div class="progress-bar" style="height: 8px;">
+            <div class="progress-fill green" style="width: 75%;"></div>
+          </div>
+          <div class="progress-label">
+            <span>Avg output</span>
+            <span>20-30 leads</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

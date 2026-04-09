@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ListKit — Omnichannel Managed Outreach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{overflow:hidden;height:100%}
+body{
+  background:#08090E;color:rgba(255,255,255,0.92);
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;overflow:hidden;height:100%;font-size:16px;line-height:1.6;
+}
+
+/* ── TOKENS ── */
+:root{
+  --accent:#7C5CFC;--accent-rgb:124,92,252;--accent-light:#9B82FD;
+  --bg:#08090E;--bg-base:#0C0D14;--bg-card:#16172A;--bg-hover:#1C1D35;
+  --text:rgba(255,255,255,0.92);--text-2:rgba(255,255,255,0.56);--text-3:rgba(255,255,255,0.32);
+  --positive:#3CCF91;--positive-rgb:60,207,145;
+  --negative:#F04438;--negative-rgb:240,68,56;
+  --caution:#F5A623;
+  --border:rgba(255,255,255,0.06);--border-h:rgba(255,255,255,0.12);
+}
+
+/* ── GRAIN OVERLAY ── */
+body::after{
+  content:"";position:fixed;inset:0;z-index:9999;pointer-events:none;opacity:0.035;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:200px;
+}
+
+/* ── SLIDE ENGINE ── */
+.deck{position:relative;width:100vw;height:100vh}
+.slide{
+  position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:80px;opacity:0;visibility:hidden;overflow:hidden;
+  transition:opacity 0.5s cubic-bezier(0.4,0,0.2,1),transform 0.5s cubic-bezier(0.4,0,0.2,1);
+  transform:scale(0.97);
+}
+.slide.active{opacity:1;visibility:visible;transform:scale(1);z-index:10}
+.slide.exiting{opacity:0;visibility:visible;transform:scale(1.02);z-index:5}
+
+/* ── CHROME ── */
+.progress{position:fixed;top:0;left:0;height:2px;background:var(--accent);transition:width 0.4s cubic-bezier(0.4,0,0.2,1);z-index:100}
+.logo{position:fixed;top:24px;left:32px;font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-3);z-index:100}
+.counter-ui{position:fixed;bottom:24px;right:32px;font-size:12px;font-weight:500;color:var(--text-3);z-index:100;font-variant-numeric:tabular-nums}
+.dots{position:fixed;right:20px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px;z-index:100}
+.dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.12);border:none;padding:0;cursor:pointer;transition:all 0.2s}
+.dot:hover{background:rgba(255,255,255,0.3)}
+.dot.on{background:var(--accent);box-shadow:0 0 8px rgba(var(--accent-rgb),0.5);transform:scale(1.4)}
+
+/* ── TYPOGRAPHY ── */
+.display{
+  font-size:clamp(40px,5.5vw,64px);font-weight:700;line-height:1.1;letter-spacing:-0.04em;
+  text-align:center;max-width:840px;position:relative;
+}
+/* Text glow behind headline */
+.display::after{
+  content:attr(data-text);position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(var(--accent-rgb),0.7),rgba(var(--accent-rgb),0.3));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  filter:blur(30px);z-index:-1;opacity:0.6;pointer-events:none;
+}
+/* Shimmer on key headlines */
+.shimmer{
+  background:linear-gradient(105deg,var(--text) 40%,rgba(var(--accent-rgb),0.6) 50%,var(--text) 60%);
+  background-size:200% 100%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  animation:shimmer 6s ease-in-out infinite;
+}
+@keyframes shimmer{0%,100%{background-position:200% 0}50%{background-position:-200% 0}}
+.h2{font-size:clamp(28px,3.5vw,40px);font-weight:700;line-height:1.15;letter-spacing:-0.03em;text-align:center;max-width:780px}
+.subtitle{font-size:17px;font-weight:400;color:var(--text-2);text-align:center;margin-top:16px;max-width:520px;line-height:1.6}
+.overline{font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--accent);margin-bottom:16px}
+.overline.neg{color:var(--negative)}.overline.cau{color:var(--caution)}.overline.pos{color:var(--positive)}
+
+/* ── ANIMATED GRADIENT ORBS ── */
+.orb-layer{position:absolute;inset:0;filter:blur(80px);pointer-events:none;z-index:0}
+.orb{position:absolute;border-radius:50%;will-change:transform}
+.orb-a{width:400px;height:400px;background:radial-gradient(circle at 30% 30%,rgba(var(--accent-rgb),0.7),rgba(var(--accent-rgb),0.2) 50%,transparent 70%);animation:of1 12s ease-in-out infinite}
+.orb-b{width:300px;height:300px;background:radial-gradient(circle at 50% 40%,rgba(236,72,153,0.5),transparent 70%);animation:of2 16s ease-in-out infinite}
+.orb-c{width:250px;height:250px;background:radial-gradient(circle at 60% 30%,rgba(56,189,248,0.4),transparent 70%);animation:of3 20s ease-in-out infinite}
+@keyframes of1{0%,100%{transform:translate(0,0) scale(1)}25%{transform:translate(60px,-40px) scale(1.05)}50%{transform:translate(-30px,50px) scale(.95)}75%{transform:translate(40px,20px) scale(1.02)}}
+@keyframes of2{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(-50px,30px) scale(1.08)}66%{transform:translate(40px,-60px) scale(.92)}}
+@keyframes of3{0%,100%{transform:translate(0,0) rotate(0deg)}50%{transform:translate(70px,-30px) rotate(180deg)}}
+
+/* Rotating conic overlay */
+@property --conic-a{syntax:"<angle>";initial-value:0deg;inherits:false}
+.conic-overlay{position:absolute;inset:0;background:conic-gradient(from var(--conic-a),transparent,rgba(var(--accent-rgb),0.08),transparent,rgba(236,72,153,0.05),transparent,rgba(56,189,248,0.06),transparent);animation:crot 25s linear infinite;mix-blend-mode:screen;pointer-events:none;z-index:0}
+@keyframes crot{to{--conic-a:360deg}}
+
+/* ── PARTICLES ── */
+.particles{position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.p{position:absolute;width:2px;height:2px;background:rgba(var(--accent-rgb),0.6);border-radius:50%;opacity:0;animation:pfloat 7s ease-in infinite}
+.p::after{content:'';position:absolute;inset:0;border-radius:50%;background:inherit;filter:blur(3px);opacity:0.5}
+@keyframes pfloat{0%{opacity:0;transform:translateY(0) scale(0.5)}10%{opacity:0.8}80%{opacity:0.3}100%{opacity:0;transform:translateY(-300px) translateX(30px) scale(1.2)}}
+
+/* ── CURSOR GLOW CARDS ── */
+.glow-grid{display:grid;gap:1px;background:var(--border);border-radius:12px;overflow:hidden;position:relative;width:100%;max-width:840px}
+.glow-grid.c3{grid-template-columns:repeat(3,1fr)}
+.glow-grid.c4{grid-template-columns:repeat(4,1fr)}
+.glow-grid::before{content:"";position:absolute;inset:0;background:radial-gradient(600px circle at var(--mx,50%) var(--my,50%),rgba(var(--accent-rgb),0.12),transparent 40%);z-index:1;pointer-events:none;opacity:0;transition:opacity 0.3s}
+.glow-grid:hover::before{opacity:1}
+.g-cell{background:var(--bg-card);padding:28px 20px;text-align:center;position:relative;transition:background 0.15s}
+.g-cell:hover{background:var(--bg-hover)}
+.g-cell::before{content:"";position:absolute;inset:0;background:radial-gradient(300px circle at var(--mx,50%) var(--my,50%),rgba(var(--accent-rgb),0.06),transparent 40%);pointer-events:none;opacity:0;transition:opacity 0.3s}
+.g-cell:hover::before{opacity:1}
+
+/* Card content */
+.gc{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:28px 24px;position:relative;overflow:hidden;transition:border-color 0.15s}
+.gc:hover{border-color:var(--border-h)}
+.gc::before{content:"";position:absolute;top:0;left:24px;width:24px;height:2px;border-radius:1px;background:var(--accent);transition:width 0.3s}
+.gc:hover::before{width:40px}
+.gc.pos::before{background:var(--positive)}
+.gc.neg::before{background:var(--negative)}
+
+.gc-icon{color:var(--accent-light);margin-bottom:12px;opacity:0.8}
+.gc-icon svg{display:block}
+.gc-t{font-size:15px;font-weight:600;margin-bottom:8px;padding-top:0}
+.gc-b{font-size:13px;color:var(--text-2);line-height:1.6}
+.gc-l{font-size:10px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;margin-top:14px;margin-bottom:4px}
+.gc-l.cau{color:var(--caution)}.gc-l.pos{color:var(--positive)}
+
+/* ── STAT VALUES ── */
+.sv{font-size:32px;font-weight:700;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;color:var(--text)}
+.sv.accent{color:var(--accent-light)}.sv.pos{color:var(--positive)}.sv.neg{color:var(--negative)}
+.sv.big{font-size:48px;letter-spacing:-0.03em}
+.sl{font-size:12px;font-weight:500;color:var(--text-2);margin-top:4px}
+.sd{font-size:11px;color:var(--text-3);margin-top:6px;line-height:1.5}
+
+/* ── PIPELINE ── */
+.pipe-box{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:44px 36px;width:100%;max-width:840px;position:relative;overflow:hidden}
+.pipe-box::before{content:'';position:absolute;top:-1px;left:50%;transform:translateX(-50%);width:40%;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0.3}
+.pipe{display:flex;align-items:center;justify-content:space-between;position:relative}
+/* SVG connector line sits behind nodes */
+.pipe-line{position:absolute;top:32px;left:56px;right:56px;height:4px;z-index:0}
+.node{display:flex;flex-direction:column;align-items:center;z-index:2;flex:1}
+.nr{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:16px;position:relative;background:var(--bg-base);border:1px solid var(--border);transition:border-color 0.2s,box-shadow 0.3s}
+.node:hover .nr{border-color:var(--border-h);box-shadow:0 0 20px rgba(var(--accent-rgb),0.1)}
+.nr svg{width:22px;height:22px;stroke:var(--text-2);stroke-width:1.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.node:nth-child(1) .nr svg,.node:nth-child(2) .nr svg{stroke:var(--accent-light)}
+.node:nth-child(3) .nr svg,.node:nth-child(4) .nr svg{stroke:var(--positive)}
+.badge-sd{position:absolute;top:-8px;right:-14px;font-size:8px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;padding:2px 7px;border-radius:4px;background:var(--positive);color:#000}
+.nl{font-size:11px;font-weight:500;color:var(--text-3);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px}
+.nv{font-size:22px;font-weight:700;letter-spacing:-0.02em}
+.ns{font-size:9px;font-weight:500;text-transform:uppercase;letter-spacing:0.06em;margin-top:2px;color:var(--text-3)}
+
+/* ── CALLOUT ── */
+.co{width:100%;max-width:840px;padding:20px 28px;border-left:2px solid var(--accent);background:var(--bg-base);border-radius:0 8px 8px 0;font-size:14px;line-height:1.6;color:var(--text-2)}
+.co strong{color:var(--text)}.co.neg{border-color:var(--negative)}.co.pos{border-color:var(--positive)}.co.cau{border-color:var(--caution)}
+.co-sub{font-size:13px;color:var(--text-3);margin-top:6px}
+
+/* ── COST TABLE ── */
+.cost-w{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden;width:100%;max-width:560px}
+.cr{display:flex;justify-content:space-between;align-items:center;padding:10px 28px;border-bottom:1px solid rgba(255,255,255,0.03);font-size:14px}
+.cr:last-of-type{border-bottom:none}
+.cr .l{color:var(--text-2)}.cr .l .plus{color:var(--accent);margin-right:8px;font-weight:600}
+.cr .a{font-weight:600;font-variant-numeric:tabular-nums}
+.cr.first .l{color:var(--text);font-weight:600}
+.cost-total{padding:18px 28px;text-align:center;background:var(--negative);font-size:18px;font-weight:700;letter-spacing:-0.01em}
+
+/* ── VS LAYOUT ── */
+.vs{display:grid;grid-template-columns:1fr 48px 1fr;gap:20px;align-items:center;width:100%;max-width:840px}
+.vs-b{width:40px;height:40px;border-radius:50%;background:var(--bg-base);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--text-3)}
+.vp{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:28px 24px}
+.vr{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px dashed rgba(255,255,255,0.04);font-size:13px}
+.vr .vl{color:var(--text-2)}.vr .va{font-weight:600;font-variant-numeric:tabular-nums}
+.vt{font-size:28px;font-weight:700;color:var(--negative);text-align:center;margin-top:16px;letter-spacing:-0.02em}
+.vt-s{font-size:13px;color:var(--text-3);text-align:center;margin-top:2px}
+.vpr{font-size:44px;font-weight:700;letter-spacing:-0.03em;color:var(--positive);text-align:center}
+.vpr-s{font-size:14px;color:var(--positive);opacity:0.7;text-align:center;margin-top:2px}
+.vs-sav{text-align:center;font-size:12px;font-weight:600;color:var(--positive);padding:8px;border:1px solid rgba(var(--positive-rgb),0.15);border-radius:8px;background:rgba(var(--positive-rgb),0.06);margin:16px 0}
+.ck{list-style:none;padding:0}
+.ck li{font-size:13px;color:var(--text-2);padding:5px 0;display:flex;align-items:center;gap:10px}
+.ck li::before{content:'';width:14px;height:14px;border-radius:50%;flex-shrink:0;background:rgba(var(--positive-rgb),0.1);border:1px solid rgba(var(--positive-rgb),0.2);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%233CCF91' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:center;background-size:8px}
+
+/* ── OPS ── */
+.ops{display:grid;grid-template-columns:1.2fr 0.8fr;gap:24px;width:100%;max-width:840px;align-items:start}
+.ops-l{display:flex;flex-direction:column;gap:10px}
+.oi{padding:14px 18px;border-left:2px solid;background:var(--bg-base);border-radius:0 8px 8px 0}
+.oi.hot{border-color:var(--negative)}.oi.warm{border-color:var(--caution)}.oi.fol{border-color:var(--accent)}.oi.re{border-color:var(--text-3)}
+.oi h4{font-size:14px;font-weight:600}.oi p{font-size:12px;color:var(--text-2);margin-top:2px}
+.ops-r{display:flex;flex-direction:column;gap:12px}
+.os{padding:20px;text-align:center;background:var(--bg-card);border:1px solid var(--border);border-radius:12px}
+.os .v{font-size:28px;font-weight:700;letter-spacing:-0.02em;color:var(--positive)}
+.os .lb{font-size:11px;color:var(--text-2);margin-top:4px}
+
+/* ── TIMELINE ── */
+.tl{display:flex;flex-direction:column;gap:0;width:100%;max-width:560px;position:relative}
+.tl::before{content:'';position:absolute;left:19px;top:36px;bottom:36px;width:1px;background:rgba(255,255,255,0.06)}
+.ts{display:flex;gap:16px;align-items:flex-start;padding:8px 0;position:relative}
+.tn{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;z-index:2;background:var(--bg-base);border:1px solid var(--border);color:var(--accent)}
+.tn.done{color:var(--positive);border-color:rgba(var(--positive-rgb),0.2);background:rgba(var(--positive-rgb),0.08)}
+.tb{padding:12px 18px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;flex:1}
+.tb h4{font-size:14px;font-weight:600;margin-bottom:2px}.tb p{font-size:12px;color:var(--text-2);line-height:1.5}
+.hs{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px 40px;text-align:center;margin-bottom:24px}
+.hs .v{font-size:clamp(28px,4vw,44px);font-weight:700;letter-spacing:-0.03em;color:var(--positive)}
+
+/* ── AUDIO ── */
+.aw{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px 28px;width:100%;max-width:560px}
+.ah{text-align:center;font-size:13px;font-weight:600;color:var(--accent);margin-bottom:20px}
+.ar{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+.ar:last-child{border-bottom:none}
+.al{font-size:12px;color:var(--text-2);width:90px;flex-shrink:0;line-height:1.4}
+.al strong{color:var(--text);display:block}
+.pb{width:32px;height:32px;border-radius:50%;background:var(--accent);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:transform 0.15s,box-shadow 0.2s}
+.pb:hover{transform:scale(1.08);box-shadow:0 0 16px rgba(var(--accent-rgb),0.4)}
+.pb svg{width:12px;height:12px;fill:#fff}
+.wv{flex:1;height:20px;display:flex;align-items:center;gap:2px}
+.wv span{display:block;width:2px;border-radius:1px;background:rgba(var(--accent-rgb),0.2)}
+.at{font-size:10px;color:var(--text-3);font-variant-numeric:tabular-nums;width:64px;text-align:right;flex-shrink:0}
+.pills{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.pill{font-size:12px;font-weight:500;padding:6px 14px;border-radius:100px;border:1px solid var(--border);color:var(--text-2);transition:border-color 0.15s}
+.pill:hover{border-color:var(--border-h);color:var(--text)}
+
+/* Quote */
+.qt{width:100%;max-width:840px;padding:24px 28px;border-left:2px solid var(--accent);background:var(--bg-base);border-radius:0 8px 8px 0}
+.qt-m{font-size:28px;color:var(--accent);line-height:1;margin-bottom:6px}
+.qt-t{font-size:15px;font-style:italic;color:var(--text);line-height:1.6;font-weight:400}
+.qt-a{font-size:12px;color:var(--text-3);margin-top:10px;text-align:right}
+.db{width:100%;max-width:840px;padding:12px 20px;text-align:center;font-size:12px;color:var(--text-3);background:var(--bg-base);border:1px solid var(--border);border-radius:8px}
+.card-grid{display:grid;gap:16px;width:100%;max-width:840px}
+.card-grid.c3{grid-template-columns:repeat(3,1fr)}
+
+/* ── REVEALS ── */
+.r{opacity:0;transform:translateY(16px);transition:opacity 0.6s cubic-bezier(0.16,1,0.3,1),transform 0.6s cubic-bezier(0.16,1,0.3,1)}
+.slide.active .r{opacity:1;transform:translateY(0)}
+.slide.active .r.d1{transition-delay:80ms}
+.slide.active .r.d2{transition-delay:160ms}
+.slide.active .r.d3{transition-delay:240ms}
+.slide.active .r.d4{transition-delay:320ms}
+.slide.active .r.d5{transition-delay:400ms}
+
+@media(max-width:768px){
+  .slide{padding:32px 24px}
+  .card-grid.c3,.glow-grid.c3,.glow-grid.c4{grid-template-columns:1fr}
+  .vs{grid-template-columns:1fr}.vs-b{display:none}
+  .ops{grid-template-columns:1fr}
+  .pipe{flex-wrap:wrap;gap:20px;justify-content:center}
+  .pipe-line{display:none}
+  .node{flex:0 0 42%}
+}
+</style>
+</head>
+<body>
+
+<div class="logo">ListKit</div>
+<div class="progress" id="prog"></div>
+<div class="counter-ui"><span id="sn">1</span> / 10</div>
+<div class="dots" id="dots"></div>
+
+<div class="deck" id="deck">
+
+<!-- ═══ 1: TITLE ═══ -->
+<div class="slide active" data-slide="0">
+  <div class="orb-layer"><div class="orb orb-a" style="top:5%;left:15%"></div><div class="orb orb-b" style="top:50%;right:10%"></div><div class="orb orb-c" style="bottom:10%;left:40%"></div></div>
+  <div class="conic-overlay"></div>
+  <div class="particles" id="pts0"></div>
+  <div class="overline r">Omnichannel Managed Outreach</div>
+  <h1 class="display shimmer r d1" data-text="Cold Emailing + Cold Calling.">Cold Emailing + Cold Calling.</h1>
+  <p class="subtitle r d2">Fully managed. $6,000/month. Meetings on your calendar.</p>
+  <div class="glow-grid c4 r d3" style="margin-top:56px">
+    <div class="g-cell" style="padding:36px 20px"><div class="sv accent" style="font-size:44px;letter-spacing:-0.03em"><span class="ctr" data-to="2200" data-sep>0</span>+</div><div class="sl" style="font-size:13px;margin-top:8px">Companies Served</div></div>
+    <div class="g-cell" style="padding:36px 20px"><div class="sv accent" style="font-size:44px;letter-spacing:-0.03em"><span class="ctr" data-to="5">0</span> Years</div><div class="sl" style="font-size:13px;margin-top:8px">Running</div></div>
+    <div class="g-cell" style="padding:36px 20px"><div class="sv accent" style="font-size:44px;letter-spacing:-0.03em"><span class="ctr" data-to="218">0</span></div><div class="sl" style="font-size:13px;margin-top:8px">Public Reviews (G2 + Trustpilot)</div></div>
+    <div class="g-cell" style="padding:36px 20px"><div class="sv accent" style="font-size:44px;letter-spacing:-0.03em"><span class="ctr" data-to="156">0</span></div><div class="sl" style="font-size:13px;margin-top:8px">Active Case Studies</div></div>
+  </div>
+</div>
+
+<!-- ═══ 2: OMNICHANNEL ═══ -->
+<div class="slide" data-slide="1" style="padding:48px 80px">
+  <div class="orb-layer"><div class="orb orb-a" style="top:-10%;left:30%"></div></div>
+  <div class="overline r" style="font-size:10px">Omnichannel System</div>
+  <h1 class="display shimmer r d1" data-text="They Open the Email. You're Already Calling." style="font-size:clamp(32px,4.5vw,52px)">They Open the Email.<br>You're Already Calling.</h1>
+  <p class="subtitle r d2" style="font-size:15px;margin-top:12px">Same-day contact after an email open. One tandem system, not two separate channels.</p>
+  <div class="pipe-box r d3" style="margin-top:28px;padding:32px 28px">
+    <svg class="pipe-line" viewBox="0 0 728 4" fill="none"><defs><linearGradient id="lg" x1="0" y1="0" x2="728" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="var(--accent)" stop-opacity="0.2"/><stop offset="100%" stop-color="var(--positive)" stop-opacity="0.2"/></linearGradient><linearGradient id="pulse"><stop offset="0%" stop-color="transparent"><animate attributeName="offset" values="-0.1;1" dur="3s" repeatCount="indefinite"/></stop><stop offset="5%" stop-color="var(--accent)"><animate attributeName="offset" values="0;1.05" dur="3s" repeatCount="indefinite"/></stop><stop offset="10%" stop-color="transparent"><animate attributeName="offset" values="0.1;1.1" dur="3s" repeatCount="indefinite"/></stop></linearGradient></defs><rect width="728" height="1" y="1.5" fill="url(#lg)" rx="0.5"/><rect width="728" height="3" y="0.5" fill="url(#pulse)" rx="1.5"/></svg>
+    <div class="pipe">
+      <div class="node"><div class="nr"><svg viewBox="0 0 24 24"><path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg></div><div class="nl">Emails Sent</div><div class="nv"><span class="ctr" data-to="10000" data-sep>0</span></div><div class="ns">Per Month</div></div>
+      <div class="node"><div class="nr"><svg viewBox="0 0 24 24"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg><span class="badge-sd">Same Day</span></div><div class="nl">Open Detected</div><div class="nv">Real-Time</div><div class="ns">AI Detection</div></div>
+      <div class="node"><div class="nr"><svg viewBox="0 0 24 24"><path d="M13 2a9 9 0 0 1 9 9"/><path d="M13 6a5 5 0 0 1 5 5"/><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg></div><div class="nl">SDR Calls</div><div class="nv"><span class="ctr" data-to="1500" data-sep>0</span>+</div><div class="ns">Dials Per Day</div></div>
+      <div class="node"><div class="nr"><svg viewBox="0 0 24 24"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></svg></div><div class="nl">Meeting Booked</div><div class="nv">Your Calendar</div><div class="ns">Booked Directly</div></div>
+    </div>
+  </div>
+  <div class="glow-grid c4 r d4" style="margin-top:16px">
+    <div class="g-cell" style="padding:20px 16px"><div class="sv" style="font-size:28px"><span class="ctr" data-to="98.5" data-dec="1">0</span>%</div><div class="sl">Inbox Delivery</div></div>
+    <div class="g-cell" style="padding:20px 16px"><div class="sv" style="font-size:28px">&lt; 1%</div><div class="sl">Bounce Rate</div></div>
+    <div class="g-cell" style="padding:20px 16px"><div class="sv" style="font-size:28px">6-8%</div><div class="sl">Live Connect Rate</div></div>
+    <div class="g-cell" style="padding:20px 16px"><div class="sv" style="font-size:28px">$<span class="ctr" data-to="947">0</span></div><div class="sl">Average CAC</div></div>
+  </div>
+  <div class="card-grid c3 r d5" style="margin-top:14px">
+    <div class="gc" style="padding:20px 18px"><div class="gc-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2a9 9 0 0 1 9 9"/><path d="M13 6a5 5 0 0 1 5 5"/><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg></div><div class="gc-t" style="font-size:13px">Same-day calls on warm opens</div><div class="gc-b" style="font-size:12px">Prospects who opened your email get called within hours. 21x more likely to qualify.</div></div>
+    <div class="gc" style="padding:20px 18px"><div class="gc-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></svg></div><div class="gc-t" style="font-size:13px">Full team, fully managed</div><div class="gc-b" style="font-size:12px">SDR recruited, trained, and replaced if they leave. No hiring. We pay for downtime.</div></div>
+    <div class="gc pos" style="padding:20px 18px"><div class="gc-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg></div><div class="gc-t" style="font-size:13px">Your domain stays clean</div><div class="gc-b" style="font-size:12px">Private sending infrastructure. 98.5% delivery rate. Primary domain never touches outreach.</div></div>
+  </div>
+  <p class="r d5" style="margin-top:14px;font-weight:600;font-size:16px;color:var(--text);text-align:center">20-30 qualified conversations per month.<span style="display:block;font-weight:400;font-size:13px;color:var(--text-3)">The output of 5-10 SDRs. The cost of one.</span></p>
+</div>
+
+<!-- ═══ 3: REAL CALLS ═══ -->
+<div class="slide" data-slide="2">
+  <div class="orb-layer"><div class="orb orb-a" style="bottom:-20%;right:10%;width:350px;height:350px"></div></div>
+  <h1 class="display r" data-text="Real Calls. Real Bookings.">Real Calls. Real Bookings.</h1>
+  <p class="subtitle r d1">This is who is calling on your behalf.</p>
+  <div class="gc r d2" style="margin-top:32px;padding:24px 40px;text-align:center;max-width:400px;width:100%">
+    <div style="font-size:10px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-3);margin-bottom:8px">Dials Per Day</div>
+    <div class="sv accent big"><span class="ctr" data-to="1500" data-sep data-speed="fast">0</span>+</div>
+  </div>
+  <p class="subtitle r d2" style="margin-top:12px;font-size:14px">Three real cold calls. Three different prospects. Listen.</p>
+  <div class="aw r d3" style="margin-top:12px">
+    <div class="ah">Listen to Real SDR Calls</div>
+    <div class="ar"><div class="al"><strong>Cold Call:</strong>Live Booking</div><button class="pb"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button><div class="wv" id="w1"></div><div class="at">0:00 / 1:01</div></div>
+    <div class="ar"><div class="al"><strong>Testimonial:</strong>2024 Review</div><button class="pb"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button><div class="wv" id="w2"></div><div class="at">0:00 / 4:42</div></div>
+  </div>
+  <div class="pills r d4" style="margin-top:20px"><div class="pill">Neutral accent</div><div class="pill">Trained on YOUR offer</div><div class="pill">Handles objections live</div><div class="pill">Books directly to calendar</div></div>
+  <div class="glow-grid c4 r d5" style="margin-top:24px">
+    <div class="g-cell"><div class="sv pos">6-8%</div><div class="sl">Live Connect Rate</div></div>
+    <div class="g-cell"><div class="sv pos">~10%</div><div class="sl">Connects to Leads</div></div>
+    <div class="g-cell"><div class="sv pos">1 meeting</div><div class="sl">Per 500 Contacts</div></div>
+    <div class="g-cell"><div class="sv pos">Private DIDs</div><div class="sl">Zero Spam Likely</div></div>
+  </div>
+</div>
+
+<!-- ═══ 4: SDR BROKEN ═══ -->
+<div class="slide" data-slide="3">
+  <div class="orb-layer"><div class="orb" style="width:400px;height:400px;top:-10%;left:40%;background:radial-gradient(circle,rgba(var(--negative-rgb),0.4),transparent 70%);animation:of1 14s ease-in-out infinite"></div></div>
+  <div class="overline neg r">The SDR Model</div>
+  <h1 class="display r d1" data-text="The SDR Model Is Broken.">The SDR Model Is Broken.</h1>
+  <p class="subtitle r d1" style="color:var(--negative);font-weight:500;opacity:0.8">The Data Proves It.</p>
+  <div class="glow-grid c4 r d2" style="margin-top:48px">
+    <div class="g-cell"><div class="sv neg big" style="font-size:40px"><span class="ctr" data-to="3.2" data-dec="1" data-speed="slow">0</span></div><div class="sl" style="color:var(--text);font-weight:600">Months</div><div class="sd">to ramp a single SDR</div><div class="sd" style="opacity:0.5;font-size:10px">Bridge Group, 2024</div></div>
+    <div class="g-cell"><div class="sv neg big" style="font-size:40px"><span class="ctr" data-to="37" data-speed="fast">0</span>%</div><div class="sd">never hit quota. Ever.</div><div class="sd" style="opacity:0.5;font-size:10px">Bridge Group</div></div>
+    <div class="g-cell"><div class="sv neg big" style="font-size:40px"><span class="ctr" data-to="35" data-speed="fast">0</span>%</div><div class="sd">leave within 12 months</div><div class="sd" style="opacity:0.5;font-size:10px">HubSpot</div></div>
+    <div class="g-cell"><div class="sv neg big" style="font-size:40px"><span class="ctr" data-to="36" data-speed="fast">0</span>%</div><div class="sd">of B2B companies cutting SDR teams</div><div class="sd" style="opacity:0.5;font-size:10px">SaaStr, 2025</div></div>
+  </div>
+  <div class="co neg r d3" style="margin-top:36px"><strong>You are paying $150K+ per year</strong> for someone who takes 3 months to ramp and has a coin-flip chance of staying.</div>
+</div>
+
+<!-- ═══ 5: REAL QUESTION ═══ -->
+<div class="slide" data-slide="4">
+  <div class="overline cau r">The Real Question</div>
+  <h1 class="display r d1" data-text="The Question Is Not Whether to Invest.">The Question Is Not Whether to Invest.</h1>
+  <p class="subtitle r d1" style="color:var(--caution);font-weight:500;font-size:clamp(20px,2.5vw,28px);letter-spacing:-0.02em">It Is Where.</p>
+  <div class="card-grid c3 r d2" style="margin-top:40px">
+    <div class="gc"><div class="gc-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></svg></div><div class="gc-t">Hire an SDR</div><div class="gc-l cau">What Happens</div><div class="gc-b">3 months to ramp. 35% quit within a year. $150K+ fully loaded. You manage them.</div><div class="gc-l pos">VS. ListKit</div><div class="gc-b">Live in 14 days. We manage everything. $72K per year. Replaced same day if they leave.</div></div>
+    <div class="gc"><div class="gc-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg></div><div class="gc-t">Use Another Agency</div><div class="gc-l cau">What Happens</div><div class="gc-b">Single channel. Shared data. Generic scripts. 6-12 month lock-in. No asset ownership.</div><div class="gc-l pos">VS. ListKit</div><div class="gc-b">Tandem system. Proprietary data. Co-founder writes scripts. Quarterly commitment. You own everything.</div></div>
+    <div class="gc"><div class="gc-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div><div class="gc-t">Do Nothing</div><div class="gc-l cau">What Happens</div><div class="gc-b">Pipeline stays flat. Competitors book the meetings you are not. Every month without outbound is revenue left on the table.</div><div class="gc-l pos">VS. ListKit</div><div class="gc-b">20-30 qualified leads per month. First meetings by week 3. $947 average customer acquisition cost.</div></div>
+  </div>
+  <div class="co cau r d3" style="margin-top:24px"><strong>Every dollar has a job.</strong> The question is whether yours is working hard enough. $6,000 per month buys you the output of 5-10 SDRs, fully managed, with zero ramp time.</div>
+</div>
+
+<!-- ═══ 6: SDR COST ═══ -->
+<div class="slide" data-slide="5" style="padding:48px 80px">
+  <h1 class="h2 r" data-text="What One SDR Actually Costs You" style="font-size:clamp(28px,3.5vw,40px)">What One SDR Actually Costs You</h1>
+  <p class="subtitle r d1" style="font-size:15px;margin-top:10px">Fully loaded. Line by line.</p>
+  <div class="cost-w r d2" style="margin-top:28px;max-width:680px">
+    <div class="cr first"><span class="l">SDR Base Salary</span><span class="a">$<span class="ctr" data-to="5000" data-sep>0</span></span></div>
+    <div class="cr"><span class="l"><span class="plus">+</span>Commission to hit $85K OTE</span><span class="a">$<span class="ctr" data-to="2083" data-sep>0</span></span></div>
+    <div class="cr"><span class="l"><span class="plus">+</span>Employer taxes, benefits</span><span class="a">$<span class="ctr" data-to="1771" data-sep>0</span></span></div>
+    <div class="cr"><span class="l"><span class="plus">+</span>ZoomInfo data contract</span><span class="a">$<span class="ctr" data-to="2500" data-sep>0</span></span></div>
+    <div class="cr"><span class="l"><span class="plus">+</span>HubSpot Sales Hub Pro</span><span class="a">$<span class="ctr" data-to="90">0</span></span></div>
+    <div class="cr"><span class="l"><span class="plus">+</span>Orum parallel dialer</span><span class="a">$<span class="ctr" data-to="250">0</span></span></div>
+    <div class="cr"><span class="l"><span class="plus">+</span>LinkedIn + Outreach + Gong</span><span class="a">$<span class="ctr" data-to="385">0</span></span></div>
+    <div class="cr"><span class="l"><span class="plus">+</span>SDR Manager (1 per 7 reps)</span><span class="a">$<span class="ctr" data-to="1500" data-sep>0</span></span></div>
+    <div class="cr"><span class="l"><span class="plus">+</span>Turnover + recruiting (35%)</span><span class="a">$<span class="ctr" data-to="1292" data-sep>0</span></span></div>
+    <div class="cost-total">$14,871/mo = $178,452/year</div>
+  </div>
+  <p class="r d3" style="text-align:center;font-size:11px;color:var(--text-3);margin-top:12px">RepVue, Bridge Group, HubSpot, BLS, Cognism, Orum</p>
+</div>
+
+<!-- ═══ 7: SOCIAL PROOF ═══ -->
+<div class="slide" data-slide="6">
+  <div class="orb-layer"><div class="orb" style="width:350px;height:350px;top:-5%;left:20%;background:radial-gradient(circle,rgba(var(--positive-rgb),0.35),transparent 70%);animation:of2 15s ease-in-out infinite"></div></div>
+  <h1 class="display r" data-text="The Numbers Across 594 Verified Reviews">The Numbers Across 594 Verified Reviews</h1>
+  <p class="subtitle r d1">Rated 4.8/5 on G2. 4/5 on Trustpilot. 2,200+ companies and counting.</p>
+  <div class="glow-grid c4 r d2" style="margin-top:40px">
+    <div class="g-cell"><div class="sv pos" style="font-size:36px">$<span class="ctr" data-to="108" data-speed="fast">0</span>K</div><div class="sl">MRR</div><div class="sd" style="text-transform:uppercase;font-size:10px;letter-spacing:0.04em">B2B SaaS</div><div class="sd">From zero to $108K MRR in 87 days. 685 meetings booked.</div></div>
+    <div class="g-cell"><div class="sv pos" style="font-size:36px"><span class="ctr" data-to="156" data-speed="fast">0</span>/mo</div><div class="sl">Leads</div><div class="sd" style="text-transform:uppercase;font-size:10px;letter-spacing:0.04em">Trucking Insurance</div><div class="sd">From 3 leads per month to 156. $30 per lead.</div></div>
+    <div class="g-cell"><div class="sv pos" style="font-size:36px"><span class="ctr" data-to="612" data-speed="fast">0</span></div><div class="sl">Leads</div><div class="sd" style="text-transform:uppercase;font-size:10px;letter-spacing:0.04em">Custom Merchandise</div><div class="sd">612 qualified leads from a single campaign.</div></div>
+    <div class="g-cell"><div class="sv pos" style="font-size:36px">$<span class="ctr" data-to="46" data-speed="fast">0</span>K/mo</div><div class="sl">Revenue</div><div class="sd" style="text-transform:uppercase;font-size:10px;letter-spacing:0.04em">Coaching</div><div class="sd">From zero outbound to $46K per month in 90 days.</div></div>
+  </div>
+  <div class="qt r d3" style="margin-top:28px"><div class="qt-m">"</div><div class="qt-t">We went from zero outbound to 19 closed deals and $39K cash collected in 90 days. $947 to acquire each customer.</div><div class="qt-a">Anthony, IT Services. ListKit client.</div></div>
+  <div class="db r d4" style="margin-top:12px">700M+ verified contacts. Triple-verified emails. Less than 1% bounce rate. You own every contact we build.</div>
+</div>
+
+<!-- ═══ 8: VS PRICING ═══ -->
+<div class="slide" data-slide="7">
+  <h1 class="h2 r" style="color:var(--negative)">Stop Burning Cash on a Team That Might Work</h1>
+  <p class="subtitle r d1">Quarterly commitment. $18,000 per quarter. Billing at checkout.</p>
+  <div class="vs r d2" style="margin-top:36px">
+    <div class="vp"><div class="overline neg" style="margin-bottom:16px">Build In-House</div><div class="vr"><span class="vl">SDR Salary</span><span class="va">$60-80K/yr</span></div><div class="vr"><span class="vl">SDR Manager</span><span class="va">$80-120K/yr</span></div><div class="vr"><span class="vl">Data (ZoomInfo/Apollo)</span><span class="va">$20-50K/yr</span></div><div class="vr"><span class="vl">Tools + Dialer</span><span class="va">$9-18K/yr</span></div><div class="vr"><span class="vl">Ramp + Churn</span><span class="va">3-6 months, 35% leave</span></div><div class="vt">$186-298K</div><div class="vt-s">/year</div></div>
+    <div class="vs-b">VS</div>
+    <div class="vp" style="border-color:rgba(var(--positive-rgb),0.15)"><div class="overline pos" style="margin-bottom:16px">Fully Managed by ListKit</div><div class="vpr">$6,000<span style="font-size:20px;opacity:0.6">/mo</span></div><div class="vpr-s">$72K/yr all-in</div><div class="vs-sav">Save $114-226K per year vs. in-house</div><ul class="ck"><li>10,000 emails per month</li><li>1,500+ dials per day</li><li>Dedicated SDR + account manager</li><li>All tools, data, and infrastructure</li><li>B2B cold calling, fully TCPA compliant</li></ul></div>
+  </div>
+  <div class="co pos r d3" style="margin-top:24px"><strong>No ROI in 90 days? No contract. You walk with every asset we built.</strong><div class="co-sub">You own every domain, contact, and data point. We run the system. You keep the assets.</div></div>
+</div>
+
+<!-- ═══ 9: OPERATIONS ═══ -->
+<div class="slide" data-slide="8">
+  <div class="overline pos r">Operations</div>
+  <h1 class="h2 r d1" style="text-align:left;max-width:840px">How the Cold Calling Engine Works</h1>
+  <div class="ops r d2" style="margin-top:32px">
+    <div class="ops-l">
+      <div class="oi hot"><h4>Hot</h4><p>Positive email replies, recently added leads. Called within hours.</p></div>
+      <div class="oi warm"><h4>Warm</h4><p>Cold leads from your ICP. Verified mobile numbers only.</p></div>
+      <div class="oi fol"><h4>Follow-up</h4><p>Call-me-laters, no-shows, booking confirmations.</p></div>
+      <div class="oi re"><h4>Reactivation</h4><p>Dormant leads, closed-lost, churned accounts.</p></div>
+    </div>
+    <div class="ops-r">
+      <div class="os"><div class="v"><span class="ctr" data-to="1500" data-sep>0</span>+</div><div class="lb">dials per day</div></div>
+      <div class="os"><div class="v">20-30</div><div class="lb">qualified leads per month</div></div>
+      <div class="os"><div class="v">Private DIDs</div><div class="lb">Carrier DIDs, automatic rotation</div></div>
+    </div>
+  </div>
+  <div class="co pos r d3" style="margin-top:20px"><strong>Email opens trigger same-day calls. Call requests trigger personalised sequences. Hot leads never wait.</strong><div class="co-sub">SDR quits? Replaced same day. You never pay for gaps. We delay your subscription.</div></div>
+</div>
+
+<!-- ═══ 10: ONBOARDING ═══ -->
+<div class="slide" data-slide="9">
+  <div class="particles" id="pts9"></div>
+  <div class="hs r"><div class="v">Your Total Time: 40 Minutes</div></div>
+  <h1 class="h2 r d1">This is all you do. Seriously.</h1>
+  <p class="subtitle r d2">Fill one form. Jump on one call. We handle the rest.</p>
+  <div class="tl r d3" style="margin-top:32px">
+    <div class="ts"><div class="tn">1</div><div class="tb"><h4>Fill the Onboarding Form</h4><p>10 minutes. Who you sell to, what makes you different, which companies you want.</p></div></div>
+    <div class="ts"><div class="tn">2</div><div class="tb"><h4>30-Min Kickoff Call</h4><p>Meet your account manager. Lock in ICP. SDR starts 1,500+ dials per day from day 2.</p></div></div>
+    <div class="ts"><div class="tn">3</div><div class="tb"><h4>We Build Everything</h4><p>Dedicated domains, SPF/DKIM/DMARC, warm-up. Triple-verified contact list. You do nothing.</p></div></div>
+    <div class="ts"><div class="tn">4</div><div class="tb"><h4>Campaigns Go Live</h4><p>AI-personalised emails firing. Cold calling engine running. Both channels in tandem.</p></div></div>
+    <div class="ts"><div class="tn done">&#10003;</div><div class="tb"><h4>You Show Up to Meetings</h4><p>Monthly reporting, strategy sessions, Slack channel. You just close deals.</p></div></div>
+  </div>
+  <p class="r d4" style="font-size:12px;color:var(--text-3);margin-top:16px;text-align:center">Integrates with HubSpot, Salesforce, GoHighLevel, and Zoho via Zapier.</p>
+</div>
+
+</div>
+
+<script>
+const slides=document.querySelectorAll('.slide'),total=slides.length;
+let cur=0,moving=false;
+const prog=document.getElementById('prog'),sn=document.getElementById('sn'),dotsEl=document.getElementById('dots');
+
+for(let i=0;i<total;i++){const d=document.createElement('button');d.className='dot'+(i===0?' on':'');d.onclick=()=>go(i);dotsEl.appendChild(d)}
+
+function chrome(){prog.style.width=((cur+1)/total*100)+'%';sn.textContent=cur+1;dotsEl.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('on',i===cur))}
+
+function go(i){
+  if(i===cur||moving||i<0||i>=total)return;moving=true;
+  slides[cur].classList.remove('active');slides[cur].classList.add('exiting');
+  cur=i;slides[cur].classList.add('active');chrome();runCtrs(slides[cur]);
+  setTimeout(()=>{document.querySelectorAll('.slide.exiting').forEach(s=>s.classList.remove('exiting'));moving=false},550);
+}
+
+document.addEventListener('keydown',e=>{if(['ArrowRight','ArrowDown',' '].includes(e.key)){e.preventDefault();go(cur+1)}if(['ArrowLeft','ArrowUp'].includes(e.key)){e.preventDefault();go(cur-1)}});
+document.addEventListener('click',e=>{if(e.target.closest('.dot,.pb,button,a'))return;e.clientX<window.innerWidth/3?go(cur-1):go(cur+1)});
+let ts=0;document.addEventListener('touchstart',e=>{ts=e.touches[0].clientX});document.addEventListener('touchend',e=>{const d=ts-e.changedTouches[0].clientX;if(Math.abs(d)>50){d>0?go(cur+1):go(cur-1)}});
+let wt;document.addEventListener('wheel',e=>{e.preventDefault();clearTimeout(wt);wt=setTimeout(()=>{e.deltaY>15?go(cur+1):e.deltaY<-15&&go(cur-1)},60)},{passive:false});
+
+// Counter animation - expo out easing
+function animCtr(el){
+  if(el.dataset.done)return;el.dataset.done='1';
+  const to=parseFloat(el.dataset.to),dec=parseInt(el.dataset.dec)||0,
+        sep=el.hasAttribute('data-sep'),
+        spd=el.dataset.speed||'normal',
+        dur={slow:2200,normal:1400,fast:800}[spd]||1400,
+        t0=performance.now();
+  function fmt(n){let s=dec>0?n.toFixed(dec):Math.round(n).toString();if(sep){const p=s.split('.');p[0]=p[0].replace(/\B(?=(\d{3})+(?!\d))/g,',');s=p.join('.')}return s}
+  (function tick(now){const p=Math.min((now-t0)/dur,1),e=1-Math.pow(1-p,3);el.textContent=fmt(e*to);if(p<1)requestAnimationFrame(tick)})(t0);
+}
+function runCtrs(s){s.querySelectorAll('.ctr').forEach(c=>{c.dataset.done='';c.textContent='0';setTimeout(()=>animCtr(c),300)})}
+runCtrs(slides[0]);
+
+// Cursor glow tracking
+document.querySelectorAll('.glow-grid').forEach(g=>{
+  g.addEventListener('pointermove',e=>{const r=g.getBoundingClientRect();g.style.setProperty('--mx',e.clientX-r.left+'px');g.style.setProperty('--my',e.clientY-r.top+'px');
+    g.querySelectorAll('.g-cell').forEach(c=>{const cr=c.getBoundingClientRect();c.style.setProperty('--mx',e.clientX-cr.left+'px');c.style.setProperty('--my',e.clientY-cr.top+'px')})
+  });
+});
+
+// Waveforms
+function mkW(id,n){const c=document.getElementById(id);if(!c)return;for(let i=0;i<n;i++){const b=document.createElement('span');b.style.height=(3+Math.random()*15)+'px';if(Math.random()>0.6)b.style.background='rgba(var(--accent-rgb),0.35)';c.appendChild(b)}}
+mkW('w1',55);mkW('w2',55);
+
+// Particles
+function mkP(id,n){const c=document.getElementById(id);if(!c)return;for(let i=0;i<n;i++){const p=document.createElement('div');p.className='p';p.style.left=Math.random()*100+'%';p.style.bottom='-10px';p.style.animationDelay=Math.random()*8+'s';p.style.animationDuration=(5+Math.random()*4)+'s';if(Math.random()>0.5){p.style.width='3px';p.style.height='3px'}c.appendChild(p)}}
+mkP('pts0',12);mkP('pts9',8);
+
+chrome();
+// URL hash navigation: #3 jumps to slide 3
+const hash=parseInt(location.hash.replace('#',''));
+if(!isNaN(hash)&&hash>=0&&hash<total){
+  slides[0].classList.remove('active');
+  cur=hash;slides[cur].classList.add('active');chrome();runCtrs(slides[cur]);
+}
+</script>
+</body>
+</html>

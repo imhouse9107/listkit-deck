@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>In-House SDR vs ListKit SDR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f1729;
+  --card: #152036;
+  --border: #2d3f5b;
+  --primary: #3c83f6;
+  --success: #21c45d;
+  --destructive: #ef4343;
+  --warning: #f59e0b;
+  --text: #fff;
+  --text-2: #94a3b8;
+  --text-3: #a0b0c0;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); height: 100vh; width: 100vw; overflow: hidden; }
+
+.slide {
+  width: 100%; height: 100%;
+  display: flex; flex-direction: column;
+  justify-content: center;
+  padding: 36px 60px;
+}
+
+.tag { display: inline-block; padding: 5px 14px; border-radius: 6px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 14px; border: 1px solid; background: rgba(239,67,67,0.08); color: var(--destructive); border-color: rgba(239,67,67,0.2); }
+
+.t2 { font-size: 34px; font-weight: 800; line-height: 1.15; letter-spacing: -0.8px; margin-bottom: 6px; }
+.t-body { font-size: 17px; line-height: 1.5; color: var(--text-2); }
+.t-small { font-size: 14px; color: var(--text-2); }
+.t-caption { font-size: 13px; color: var(--text-3); }
+.bold { font-weight: 700; color: var(--text); }
+.c-red { color: var(--destructive); }
+.c-green { color: var(--success); }
+.c-primary { color: var(--primary); }
+.grad { background: linear-gradient(135deg, #3c83f6, #80bfff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+/* ---- COMPARISON GRID ---- */
+.comparison {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  margin-top: 18px;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ---- LEFT SIDE: CHAOS ---- */
+.side-chaos {
+  background: var(--card);
+  border: 2px solid rgba(239,67,67,0.35);
+  border-radius: 14px;
+  padding: 22px 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle red noise overlay for chaos vibes */
+.side-chaos::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 10px,
+    rgba(239,67,67,0.015) 10px,
+    rgba(239,67,67,0.015) 20px
+  );
+  pointer-events: none;
+}
+
+.side-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 14px;
+}
+
+.side-icon { font-size: 24px; }
+
+.side-title {
+  font-size: 18px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 1px;
+}
+
+/* Chaos desk scene */
+.chaos-desk {
+  background: rgba(239,67,67,0.05);
+  border: 1px solid rgba(239,67,67,0.15);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  font-family: monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text-2);
+  position: relative;
+}
+
+.chaos-desk .desk-item {
+  display: flex; align-items: center; gap: 8px;
+}
+
+.chaos-desk .desk-item span.emoji {
+  font-size: 16px;
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
+}
+
+/* Turnover counter */
+.turnover-board {
+  background: #1a1a2e;
+  border: 2px dashed rgba(239,67,67,0.4);
+  border-radius: 8px;
+  padding: 10px 14px;
+  text-align: center;
+  margin-bottom: 12px;
+  font-family: monospace;
+}
+
+.turnover-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--text-3);
+  margin-bottom: 4px;
+}
+
+.turnover-number {
+  font-size: 36px;
+  font-weight: 900;
+  color: var(--destructive);
+  line-height: 1;
+}
+
+.turnover-caption {
+  font-size: 11px;
+  color: var(--text-3);
+  margin-top: 2px;
+}
+
+/* Chaos stats */
+.chaos-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.chaos-stat {
+  background: rgba(239,67,67,0.06);
+  border: 1px solid rgba(239,67,67,0.12);
+  border-radius: 8px;
+  padding: 10px 12px;
+  text-align: center;
+}
+
+.chaos-stat-val {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--destructive);
+}
+
+.chaos-stat-label {
+  font-size: 11px;
+  color: var(--text-3);
+  margin-top: 2px;
+}
+
+/* Browser tabs chaos bar */
+.tab-bar {
+  display: flex;
+  gap: 3px;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+
+.tab {
+  background: rgba(239,67,67,0.08);
+  border: 1px solid rgba(239,67,67,0.15);
+  border-radius: 6px 6px 0 0;
+  padding: 4px 7px;
+  font-size: 9px;
+  color: var(--text-3);
+  white-space: nowrap;
+  font-family: monospace;
+}
+
+.tab.active-tab {
+  background: rgba(239,67,67,0.15);
+  color: var(--destructive);
+}
+
+/* ---- RIGHT SIDE: CLEAN ---- */
+.side-clean {
+  background: var(--card);
+  border: 2px solid rgba(33,196,93,0.35);
+  border-radius: 14px;
+  padding: 22px 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.side-clean::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(60,131,246,0.04), transparent 70%);
+  pointer-events: none;
+}
+
+/* Clean desk scene */
+.clean-desk {
+  background: rgba(33,196,93,0.04);
+  border: 1px solid rgba(33,196,93,0.12);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  font-family: monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text-2);
+}
+
+.clean-desk .desk-item {
+  display: flex; align-items: center; gap: 8px;
+}
+
+.clean-desk .desk-item span.emoji {
+  font-size: 16px;
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
+}
+
+/* KPI board */
+.kpi-board {
+  background: #0d1f15;
+  border: 2px solid rgba(33,196,93,0.3);
+  border-radius: 8px;
+  padding: 10px 14px;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.kpi-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--success);
+  margin-bottom: 6px;
+}
+
+.kpi-row {
+  display: flex;
+  justify-content: space-around;
+  gap: 6px;
+}
+
+.kpi-item {
+  text-align: center;
+}
+
+.kpi-val {
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--success);
+  line-height: 1;
+}
+
+.kpi-desc {
+  font-size: 10px;
+  color: var(--text-3);
+  margin-top: 2px;
+}
+
+/* Clean stats */
+.clean-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.clean-stat {
+  background: rgba(33,196,93,0.06);
+  border: 1px solid rgba(33,196,93,0.12);
+  border-radius: 8px;
+  padding: 10px 12px;
+  text-align: center;
+}
+
+.clean-stat-val {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--success);
+}
+
+.clean-stat-label {
+  font-size: 11px;
+  color: var(--text-3);
+  margin-top: 2px;
+}
+
+/* Replacement guarantee banner */
+.guarantee {
+  background: rgba(60,131,246,0.08);
+  border: 1px solid rgba(60,131,246,0.2);
+  border-radius: 8px;
+  padding: 8px 12px;
+  text-align: center;
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--primary);
+  font-weight: 700;
+}
+
+/* Bottom punchline */
+.punchline {
+  text-align: center;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.punchline-text {
+  font-size: 16px;
+  font-style: italic;
+  color: var(--text-3);
+}
+
+/* VS badge */
+.vs-badge {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 14px;
+  color: var(--text-2);
+  letter-spacing: 1px;
+}
+
+.comparison-wrapper {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.comparison-wrapper .comparison {
+  height: 100%;
+}
+
+/* Sticky notes on chaos side */
+.sticky-notes {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.sticky {
+  padding: 4px 8px;
+  font-size: 10px;
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  border-radius: 2px;
+  transform: rotate(-2deg);
+  line-height: 1.3;
+}
+
+.sticky:nth-child(2) { transform: rotate(3deg); }
+.sticky:nth-child(3) { transform: rotate(-1deg); }
+
+.sticky-yellow { background: #fef08a; color: #713f12; }
+.sticky-pink { background: #fda4af; color: #881337; }
+.sticky-blue { background: #93c5fd; color: #1e3a5f; }
+
+@media (max-width: 1200px) {
+  .slide { padding: 28px 36px; }
+  .t2 { font-size: 28px; }
+}
+
+@media (max-height: 768px) {
+  .slide { padding: 24px 48px; }
+  .t2 { font-size: 28px; }
+  .chaos-desk, .clean-desk { padding: 10px 12px; font-size: 12px; line-height: 1.5; }
+  .turnover-number { font-size: 28px; }
+  .kpi-val { font-size: 17px; }
+  .chaos-stat-val, .clean-stat-val { font-size: 19px; }
+}
+</style>
+</head>
+<body>
+
+<section class="slide">
+  <span class="tag">The Reality Check</span>
+  <h2 class="t2">Hiring an SDR vs. Using <span class="grad">ListKit</span></h2>
+  <p class="t-body" style="margin-bottom: 4px;">Same goal. Very different experience.</p>
+
+  <div class="comparison-wrapper">
+    <div class="vs-badge">VS</div>
+    <div class="comparison">
+
+      <!-- LEFT: THE CHAOS -->
+      <div class="side-chaos">
+        <div class="side-header">
+          <span class="side-icon">💀</span>
+          <span class="side-title c-red">The In-House SDR</span>
+        </div>
+
+        <!-- Browser tab chaos -->
+        <div class="tab-bar">
+          <div class="tab">LinkedIn</div>
+          <div class="tab active-tab">ZoomInfo</div>
+          <div class="tab">Salesfo...</div>
+          <div class="tab">HubSp...</div>
+          <div class="tab">Slack</div>
+          <div class="tab">Reddit</div>
+          <div class="tab">Spotif...</div>
+          <div class="tab">Gmail</div>
+          <div class="tab">TikTok</div>
+          <div class="tab">Outrea...</div>
+          <div class="tab">Yout...</div>
+        </div>
+
+        <!-- Sticky notes -->
+        <div class="sticky-notes">
+          <div class="sticky sticky-yellow">call Dave back??</div>
+          <div class="sticky sticky-pink">FOLLOW UP!!</div>
+          <div class="sticky sticky-blue">PW: hunter123</div>
+        </div>
+
+        <!-- Desk scene -->
+        <div class="chaos-desk">
+          <div class="desk-item"><span class="emoji">🪑</span> Bean bag chair (serious workplace)</div>
+          <div class="desk-item"><span class="emoji">💨</span> Vape cloud. Energy drink. Broken headset.</div>
+          <div class="desk-item"><span class="emoji">📱</span> Phone: 50% TikTok, 50% "prospecting"</div>
+          <div class="desk-item"><span class="emoji">🎧</span> "Bro, watch this cold call" (it's terrible)</div>
+        </div>
+
+        <!-- Turnover counter -->
+        <div class="turnover-board">
+          <div class="turnover-label">Days Since Last Resignation</div>
+          <div class="turnover-number">3</div>
+          <div class="turnover-caption">Record: 11</div>
+        </div>
+
+        <!-- Stats -->
+        <div class="chaos-stats">
+          <div class="chaos-stat">
+            <div class="chaos-stat-val">52%</div>
+            <div class="chaos-stat-label">Quit in 12 months</div>
+          </div>
+          <div class="chaos-stat">
+            <div class="chaos-stat-val">$8-12K</div>
+            <div class="chaos-stat-label">/mo salary alone</div>
+          </div>
+          <div class="chaos-stat">
+            <div class="chaos-stat-val">3-6mo</div>
+            <div class="chaos-stat-label">Before productive</div>
+          </div>
+          <div class="chaos-stat">
+            <div class="chaos-stat-val">~40</div>
+            <div class="chaos-stat-label">Dials/day (maybe)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: THE CLEAN MACHINE -->
+      <div class="side-clean">
+        <div class="side-header">
+          <span class="side-icon">🎯</span>
+          <span class="side-title c-green">The ListKit SDR</span>
+        </div>
+
+        <!-- Clean single-focus screen -->
+        <div style="display: flex; gap: 3px; margin-bottom: 12px;">
+          <div class="tab" style="background: rgba(33,196,93,0.1); border-color: rgba(33,196,93,0.2); color: var(--success); flex: 1; text-align: center;">Parallel Dialer -- LIVE</div>
+        </div>
+
+        <!-- Clean desk -->
+        <div class="clean-desk">
+          <div class="desk-item"><span class="emoji">🖥️</span> Dual monitors. Parallel dialer. CRM open.</div>
+          <div class="desk-item"><span class="emoji">🎧</span> Professional headset. Neutral US accent.</div>
+          <div class="desk-item"><span class="emoji">📋</span> Custom script, co-written with your team.</div>
+          <div class="desk-item"><span class="emoji">☕</span> No vape. No TikTok. Just calls.</div>
+        </div>
+
+        <!-- KPI Board -->
+        <div class="kpi-board">
+          <div class="kpi-label">Today's Targets</div>
+          <div class="kpi-row">
+            <div class="kpi-item">
+              <div class="kpi-val">1,500</div>
+              <div class="kpi-desc">Dials/day</div>
+            </div>
+            <div class="kpi-item">
+              <div class="kpi-val">6-8%</div>
+              <div class="kpi-desc">Connect rate</div>
+            </div>
+            <div class="kpi-item">
+              <div class="kpi-val">20-30</div>
+              <div class="kpi-desc">Leads/mo</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="clean-stats">
+          <div class="clean-stat">
+            <div class="clean-stat-val">$6K</div>
+            <div class="clean-stat-label">/mo. Everything in.</div>
+          </div>
+          <div class="clean-stat">
+            <div class="clean-stat-val">14 days</div>
+            <div class="clean-stat-label">To fully live</div>
+          </div>
+          <div class="clean-stat">
+            <div class="clean-stat-val">0%</div>
+            <div class="clean-stat-label">Turnover risk</div>
+          </div>
+          <div class="clean-stat">
+            <div class="clean-stat-val">24hrs</div>
+            <div class="clean-stat-label">Replacement if they leave</div>
+          </div>
+        </div>
+
+        <!-- Guarantee -->
+        <div class="guarantee">SDR leaves? Replaced next business day. Zero downtime.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="punchline">
+    <p class="punchline-text">"One of these costs you $150K/year and a drinking problem. The other costs $6K/month and actually books meetings."</p>
+  </div>
+</section>
+
+</body>
+</html>
