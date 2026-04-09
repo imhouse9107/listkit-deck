@@ -34,8 +34,13 @@ body::after{
   background-size:200px;
 }
 
+/* ── AUTO-FIT STAGE ── */
+/* Deck is designed at 1920x1080 base. Stage wrapper scales it to fit any viewport,
+   maintaining aspect ratio with letterboxing. Set via JS on load + resize. */
+html,body{background:#000}
+.stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
 /* ── SLIDE ENGINE ── */
-.deck{position:relative;width:100vw;height:100vh}
+.deck{position:relative;width:1920px;height:1080px;transform-origin:center center;flex-shrink:0}
 .slide{
   position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
   padding:80px;opacity:0;visibility:hidden;overflow:hidden;
@@ -253,6 +258,7 @@ body::after{
 <div class="counter-ui"><span id="sn">1</span> / 10</div>
 <div class="dots" id="dots"></div>
 
+<div class="stage" id="stage">
 <div class="deck" id="deck">
 
 <!-- ═══ 1: TITLE ═══ -->
@@ -435,8 +441,19 @@ body::after{
 </div>
 
 </div>
+</div>
 
 <script>
+/* Auto-fit scaler: scales the 1920x1080 deck to fit any viewport, maintaining aspect ratio. */
+function fitStage(){
+  const deck=document.getElementById('deck');
+  if(!deck)return;
+  const s=Math.min(window.innerWidth/1920,window.innerHeight/1080);
+  deck.style.transform='scale('+s+')';
+}
+fitStage();
+window.addEventListener('resize',fitStage);
+
 const slides=document.querySelectorAll('.slide'),total=slides.length;
 let cur=0,moving=false;
 const prog=document.getElementById('prog'),sn=document.getElementById('sn'),dotsEl=document.getElementById('dots');
