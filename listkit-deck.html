@@ -329,11 +329,21 @@ html,body{background:#000}
     <div style="font-size:10px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-3);margin-bottom:8px">Dials Per Day</div>
     <div class="sv accent big"><span class="ctr" data-to="1500" data-sep data-speed="fast">0</span>+</div>
   </div>
-  <p class="subtitle r d2" style="margin-top:12px;font-size:14px">Three real cold calls. Three different prospects. Listen.</p>
+  <p class="subtitle r d2" style="margin-top:12px;font-size:14px">Real cold calls. Real prospects. Real bookings. Press play.</p>
   <div class="aw r d3" style="margin-top:12px">
     <div class="ah">Listen to Real SDR Calls</div>
-    <div class="ar"><div class="al"><strong>Cold Call:</strong>Live Booking</div><button class="pb"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button><div class="wv" id="w1"></div><div class="at">0:00 / 1:01</div></div>
-    <div class="ar"><div class="al"><strong>Testimonial:</strong>2024 Review</div><button class="pb"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button><div class="wv" id="w2"></div><div class="at">0:00 / 4:42</div></div>
+    <div class="ar" data-src="https://imhouse9107.github.io/listkit-deck/assets/sdr-call-boosted.mp3">
+      <div class="al"><strong>Cold Call:</strong>Live Booking</div>
+      <button class="pb" type="button" aria-label="Play"><svg class="ic-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg class="ic-pause" viewBox="0 0 24 24" style="display:none"><path d="M6 4h4v16H6zm8 0h4v16h-4z"/></svg></button>
+      <div class="wv" id="w1"></div>
+      <div class="at">0:00 / 0:00</div>
+    </div>
+    <div class="ar" data-src="https://imhouse9107.github.io/listkit-deck/assets/sdr-clip-1.mp3">
+      <div class="al"><strong>Cold Call:</strong>Objection Handle</div>
+      <button class="pb" type="button" aria-label="Play"><svg class="ic-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg class="ic-pause" viewBox="0 0 24 24" style="display:none"><path d="M6 4h4v16H6zm8 0h4v16h-4z"/></svg></button>
+      <div class="wv" id="w2"></div>
+      <div class="at">0:00 / 0:00</div>
+    </div>
   </div>
   <div class="pills r d4" style="margin-top:20px"><div class="pill">Neutral accent</div><div class="pill">Trained on YOUR offer</div><div class="pill">Handles objections live</div><div class="pill">Books directly to calendar</div></div>
   <div class="glow-grid c4 r d5" style="margin-top:24px">
@@ -458,6 +468,50 @@ html,body{background:#000}
 </div>
 
 <script>
+/* ── AUDIO PLAYERS ── wire up every .ar with data-src to a real HTMLAudioElement */
+function initAudioPlayers(){
+  document.querySelectorAll('.ar[data-src]').forEach(row=>{
+    if(row.dataset.wired)return;row.dataset.wired='1';
+    const src=row.dataset.src;
+    const audio=new Audio();audio.preload='metadata';audio.src=src;
+    const btn=row.querySelector('.pb');
+    const iPlay=row.querySelector('.ic-play');
+    const iPause=row.querySelector('.ic-pause');
+    const timeEl=row.querySelector('.at');
+    const wave=row.querySelector('.wv');
+    const fmt=s=>{if(!isFinite(s))return'0:00';const m=Math.floor(s/60);const sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec;};
+    audio.addEventListener('loadedmetadata',()=>{timeEl.textContent='0:00 / '+fmt(audio.duration);});
+    audio.addEventListener('timeupdate',()=>{
+      timeEl.textContent=fmt(audio.currentTime)+' / '+fmt(audio.duration);
+      if(wave){
+        const p=audio.currentTime/(audio.duration||1);
+        const bars=wave.querySelectorAll('span');
+        const activeCount=Math.floor(p*bars.length);
+        bars.forEach((b,i)=>{b.style.background=i<activeCount?'rgba(var(--accent-rgb),0.9)':'rgba(var(--accent-rgb),0.2)';});
+      }
+    });
+    /* Click waveform to seek */
+    if(wave){wave.style.cursor='pointer';wave.addEventListener('click',e=>{
+      const rect=wave.getBoundingClientRect();
+      const p=(e.clientX-rect.left)/rect.width;
+      if(isFinite(audio.duration))audio.currentTime=p*audio.duration;
+    });}
+    audio.addEventListener('ended',()=>{iPlay.style.display='';iPause.style.display='none';});
+    btn.addEventListener('click',e=>{
+      e.stopPropagation();
+      /* pause any other playing audios */
+      document.querySelectorAll('.ar[data-src]').forEach(other=>{
+        if(other!==row&&other._audio&&!other._audio.paused){other._audio.pause();other.querySelector('.ic-play').style.display='';other.querySelector('.ic-pause').style.display='none';}
+      });
+      if(audio.paused){audio.play();iPlay.style.display='none';iPause.style.display='';}
+      else{audio.pause();iPlay.style.display='';iPause.style.display='none';}
+    });
+    row._audio=audio;
+  });
+}
+document.addEventListener('DOMContentLoaded',initAudioPlayers);
+initAudioPlayers();
+
 /* Auto-fit scaler: scales the 1920x1080 deck to fit any viewport, maintaining aspect ratio. */
 function fitStage(){
   const deck=document.getElementById('deck');
